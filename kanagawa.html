@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神奈川県小学生バドミントン連盟 登録管理システム</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <style>
+        /* 基本スタイル */
+        body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; }
+        .menu-list .list-group-item { cursor: pointer; border-left: 4px solid transparent; transition: all 0.2s; }
+        .menu-list .list-group-item:hover { background-color: #f8f9fa; }
+        .menu-list .list-group-item.active { background-color: #e7f1ff; color: #0d6efd; border-left-color: #0d6efd; border-color: #dee2e6; font-weight: bold; }
+        .main-content-card { min-height: 500px; border-top: 4px solid #0d6efd; }
+        .auth-tab { cursor: pointer; padding: 10px; border-bottom: 2px solid transparent; width: 50%; text-align: center; }
+        .auth-tab.active { border-bottom: 3px solid #0d6efd; color: #0d6efd; font-weight: bold; background-color: #f8f9fa;}
+        .univ-list-container { max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 0.375rem; }
+        .univ-list-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+        .univ-list-item:hover { background-color: #e9ecef; }
+        .univ-list-item.selected { background-color: #cfe2ff; color: #084298; font-weight: bold; }
+        .payment-box { background-color: #fff3cd; border: 1px solid #ffecb5; border-radius: 8px; padding: 15px; margin-top: 20px; }
+        .payment-id { font-family: monospace; font-size: 1.8rem; font-weight: bold; letter-spacing: 3px; background: white; padding: 5px 20px; border-radius: 5px; border: 2px solid #ffc107; display: inline-block; color: #000; }
+        
+        /* アップロード・プレビュー用スタイル */
+        .receipt-preview { max-width: 100%; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; margin-top: 10px; }
+        .receipt-area { background-color: #fff; border: 2px dashed #bbb; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: center; }
+        .badge-uploaded { background-color: #198754; color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.9rem; }
+        .badge-missing { background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.9rem; }
+
+        .save-area { margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6; text-align: center; }
+        .excel-upload-area { background-color: #f1f8ff; border: 2px dashed #0d6efd; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+        .count-input-group { background: #fff; padding: 15px; border: 1px solid #dee2e6; border-radius: 6px; }
+
+        /* 決算書・領収書用スタイル */
+        .report-container { background-color: white; padding: 40px; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 2px solid #000; table-layout: fixed; }
+        .report-table th, .report-table td { border: 1px solid #000; padding: 10px 15px; vertical-align: middle; word-wrap: break-word; }
+        .report-table th { background-color: #f2f2f2; text-align: center; font-weight: bold; border-bottom: 2px solid #000; }
+        .report-table tfoot th, .report-table tfoot td { border-top: 2px solid #000; background-color: #f9f9f9; font-weight: bold; }
+        .report-table .col-item { width: 30%; }
+        .report-table .col-detail { width: 50%; font-size: 0.9rem; }
+        .report-table .col-price { width: 20%; text-align: right; }
+        .memo-box { border: 1px solid #000; padding: 15px; min-height: 150px; border-radius: 4px; white-space: pre-wrap; background: #fff; }
+
+        /* 管理者用スタイル */
+        .status-badge { font-size: 0.8rem; cursor: pointer; display: inline-block; width: 100%; text-align: center; padding: 4px 0; border-radius: 4px; border: 1px solid #ddd; margin-bottom: 2px; }
+        .status-none { background-color: #f8f9fa; color: #aaa; } 
+        .status-waiting { background-color: #fff3cd; color: #856404; border-color: #ffeeba; } 
+        .status-done { background-color: #d1e7dd; color: #0f5132; border-color: #badbcc; font-weight: bold; }
+        .status-pending { background-color: #fd7e14; color: white; border-color: #e87311; } 
+        .receipt-modal-img { max-width: 100%; max-height: 80vh; object-fit: contain; }
+        .btn-approve { font-weight: bold; padding: 10px 30px; font-size: 1.1rem; }
+        .table-admin th { background-color: #343a40; color: white; position: sticky; top: 0; z-index: 10; font-size: 0.85rem; white-space: nowrap; }
+        .table-admin td { vertical-align: middle; font-size: 0.9rem; }
+        .univ-name-cell { min-width: 150px; font-weight: bold; }
+        .money-cell { font-family: monospace; text-align: right; white-space: nowrap; }
+        .password-cell { font-family: monospace; color: #d63384; font-weight: bold; font-size: 0.8rem; }
+
+        /* チャット用スタイル */
+        .chat-container { height: 500px; display: flex; flex-direction: column; border: 1px solid #ddd; border-radius: 8px; background: #f0f2f5; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .message-bubble { max-width: 75%; padding: 10px 15px; border-radius: 15px; font-size: 0.95rem; white-space: pre-wrap; position: relative; }
+        .msg-mine { align-self: flex-end; background-color: #0d6efd; color: white; border-bottom-right-radius: 2px; }
+        .msg-other { align-self: flex-start; background-color: white; color: black; border: 1px solid #e5e5e5; border-bottom-left-radius: 2px; }
+        .msg-info { font-size: 0.75rem; margin-top: 4px; opacity: 0.7; text-align: right; }
+        .chat-input-area { background: white; padding: 10px; border-top: 1px solid #ddd; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
+
+        /* 印刷設定 */
+        @media print {
+            body { background-color: white; color: black; }
+            .no-print, .menu-list, .btn, .card-header, .save-area, nav, .payment-box button, .excel-upload-area, .count-input-group, .chat-input-area, .status-badge, .chat-container { display: none !important; }
+            .container-fluid, .row, .col-md-9, .col-lg-10 { padding: 0 !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; flex: none !important; }
+            .main-content-card { border: none !important; box-shadow: none !important; min-height: 0 !important; }
+            .card-body { padding: 0 !important; }
+            .report-container { border: none; box-shadow: none; padding: 0; }
+            .report-table th { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .page-break { page-break-before: always; }
+            
+            /* 領収書印刷時の制御 */
+            #receiptModal.show { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 9999; background: white; }
+            #receiptModal.show .modal-dialog { margin: 0; max-width: 100%; }
+            #receiptModal.show .modal-content { border: none; box-shadow: none; }
+            #receiptModal.show .modal-header, #receiptModal.show .modal-footer { display: none !important; }
+            #receiptModal.show .modal-body { padding: 0; }
+            .receipt-layout { border: none; padding: 20px; }
+            
+            /* 領収書が開いているときは他を隠す */
+            body:has(#receiptModal.show) > #app > div > div:not(#receiptModal) { display: none !important; }
+        }
+
+        /* 領収書・電子印鑑用スタイル */
+        .receipt-layout { border: 4px double #333; padding: 40px; color: #000; font-family: "Mincho", serif; position: relative; background: white; }
+        .receipt-title { font-size: 2rem; text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; display: inline-block; padding: 0 20px; }
+        .receipt-amount { font-size: 2.5rem; font-weight: bold; text-align: center; margin: 20px 0; border-bottom: 1px solid #000; }
+        .receipt-detail { margin-top: 20px; font-size: 1.1rem; line-height: 1.8; }
+        .issuer-info { margin-top: 40px; text-align: right; position: relative; }
+        .hanko-box { position: absolute; right: 0; top: 0; width: 90px; height: 90px; opacity: 0.85; transform: rotate(-2deg); user-select: none; }
+        @media print { .hanko-box { opacity: 1; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    </style>
+</head>
+<body>
+    <div id="app" class="container-fluid py-3" style="max-width: 1200px;">
+        <div v-if="isLoading" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">データを読み込んでいます...</p></div>
+
+        <div v-else>
+            <div v-if="!user && !isAdmin" class="row justify-content-center mt-5">
+                <div class="col-md-6 col-lg-5">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white p-0">
+                            <div class="d-flex"><div class="auth-tab" :class="{active: !isRegisterMode}" @click="isRegisterMode = false">ログイン</div><div class="auth-tab" :class="{active: isRegisterMode}" @click="toggleRegisterMode">新規登録</div></div>
+                        </div>
+                        <div class="card-body p-4">
+                            <h4 class="text-center mb-4">神奈川県小学生バドミントン連盟</h4>
+                            <div v-if="isRegisterMode">
+                                <div class="alert alert-light border small mb-3"><i class="bi bi-info-circle"></i> リストからクラブを選択してください。</div>
+                                <div class="mb-3"><label class="form-label fw-bold">クラブ選択</label><input type="text" class="form-control mb-2" v-model="searchQuery" placeholder="クラブ名で検索..."><div class="univ-list-container bg-white"><div v-if="filteredUnivList.length === 0" class="p-3 text-muted text-center small">該当なし</div><div v-for="univ in filteredUnivList" :key="univ.univ_id" class="univ-list-item d-flex justify-content-between" :class="{ selected: regForm.univ_id === univ.univ_id }" @click="selectUniv(univ)"><span>{{ univ.univ_name }}</span><span class="badge bg-light text-dark border">{{ univ.univ_id }}</span></div></div><div v-if="regForm.univ_id" class="mt-2 p-2 bg-primary bg-opacity-10 border border-primary rounded text-primary text-center">選択中: <strong>{{ regUnivName }}</strong></div><div v-if="regError" class="mt-2 text-danger small"><i class="bi bi-exclamation-triangle"></i> {{ regError }}</div></div>
+                                <div class="mb-4"><label class="form-label fw-bold">代表者氏名</label><input type="text" v-model="regForm.representative" class="form-control" placeholder="例: 神奈川 太郎"></div>
+                            </div>
+                            <div class="mb-3"><label class="form-label">メールアドレス</label><input type="text" v-model="authEmail" class="form-control"></div>
+                            <div class="mb-2"><label class="form-label">パスワード (6文字以上)</label><input type="password" v-model="authPass" class="form-control"></div>
+                            
+                            <button v-if="!isRegisterMode" @click="login" class="btn btn-primary w-100 py-2">ログイン</button>
+                            <button v-else @click="register" class="btn btn-success w-100 py-2" :disabled="!!regError || !regForm.univ_id || !regForm.representative">登録して開始</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else-if="isAdmin">
+                <nav class="navbar navbar-dark bg-dark px-3 mb-3 rounded">
+                    <span class="navbar-brand mb-0 h1"><i class="bi bi-speedometer2"></i> 管理者ダッシュボード</span>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-light" @click="downloadAllCSV"><i class="bi bi-file-earmark-spreadsheet"></i> 全データCSV</button>
+                        <button class="btn btn-sm btn-danger" @click="logout">ログアウト</button>
+                    </div>
+                </nav>
+
+                <div class="card mb-4 border-primary">
+                    <div class="card-header bg-primary text-white fw-bold"><i class="bi bi-folder-fill"></i> 大会データ管理</div>
+                    <div class="card-body">
+                        <div class="row align-items-end g-2">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">対象のカテゴリーを選択</label>
+                                <select v-model="selectedTournament" class="form-select">
+                                    <option v-for="(cat, key) in categories" :value="key" :key="key">{{ cat.label }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-success" @click="downloadTournamentZip">
+                                        <i class="bi bi-file-earmark-zip-fill"></i> Excel一括DL (ZIP)
+                                    </button>
+                                    <button class="btn btn-outline-dark" @click="downloadTournamentCSV">
+                                        <i class="bi bi-file-text"></i> この大会のCSV出力
+                                    </button>
+                                </div>
+                                <div v-if="isZipping" class="text-success small mt-1">
+                                    <div class="spinner-border spinner-border-sm" role="status"></div> ファイルを収集中... (時間がかかる場合があります)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4 border-info">
+                    <div class="card-header bg-info text-white fw-bold"><i class="bi bi-megaphone-fill"></i> 連絡事項の管理</div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-md-3"><input type="date" class="form-control" v-model="adminNews.date"></div>
+                            <div class="col-md-9"><input type="text" class="form-control" v-model="adminNews.title" placeholder="タイトル"></div>
+                            <div class="col-12"><textarea class="form-control" v-model="adminNews.content" rows="3" placeholder="本文"></textarea></div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold"><i class="bi bi-paperclip"></i> 添付ファイル </label>
+                                <input type="file" class="form-control form-control-sm" @change="uploadNewsFile">
+                                <div v-if="adminNews.url" class="mt-1 small text-success">
+                                    <i class="bi bi-check-circle"></i> アップロード完了
+                                    <a :href="adminNews.url" target="_blank" class="ms-2 text-decoration-none">確認</a>
+                                </div>
+                                <div v-if="isUploadingNews" class="spinner-border spinner-border-sm mt-1 text-primary"></div>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <button class="btn btn-info text-white fw-bold" @click="addNews" :disabled="isUploadingNews">投稿する</button>
+                        </div>
+                        <hr>
+                        <h6 class="text-muted small">投稿済みリスト</h6>
+                        <ul class="list-group">
+                            <li v-for="(n, i) in newsList" :key="i" class="list-group-item d-flex justify-content-between align-items-center py-1">
+                                <span class="small">{{ new Date(n.date).toLocaleDateString() }} : {{ n.title }}</span>
+                                <button class="btn btn-sm btn-outline-danger" @click="deleteNews(i)">削除</button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3"><div class="card text-bg-primary h-100"><div class="card-body text-center"><h6 class="card-title opacity-75">登録クラブ数</h6><h2 class="card-text">{{ adminRecords.length }} <small class="fs-6">団体</small></h2></div></div></div>
+                    <div class="col-md-3"><div class="card text-bg-success h-100"><div class="card-body text-center"><h6 class="card-title opacity-75">総請求額 (概算)</h6><h2 class="card-text">¥{{ adminTotalRevenue.toLocaleString() }}</h2></div></div></div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-secondary">
+                            <div class="card-body">
+                                <h6 class="card-title text-muted">フィルタ</h6>
+                                <input type="text" class="form-control form-control-sm mt-2" v-model="adminSearchQuery" placeholder="クラブ名で検索...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive shadow-sm border rounded" style="max-height: 70vh;">
+                    <table class="table table-hover table-admin mb-0">
+                        <thead><tr>
+                            <th>ID</th><th>クラブ名</th><th>代表者</th><th>連絡</th><th>請求合計</th>
+                            <th>①登録</th><th>②講習会</th><th>③クラス</th><th>④若葉</th><th>⑤ABC</th>
+                            <th>⑥審判</th><th>⑦会長杯</th><th>⑧関東</th><th>⑨新人</th><th>⑩連盟複</th><th>⑪追加</th>
+                            <th>備考・連絡</th>
+                        </tr></thead>
+                        <tbody>
+                            <tr v-for="rec in filteredAdminRecords" :key="rec.univ_id">
+                                <td>{{ rec.univ_id }}</td>
+                                <td class="univ-name-cell">{{ rec.univ_name }}</td>
+                                <td style="font-size:0.85rem;">{{ rec.raw_data.representative || '-' }}</td>
+                                <td>
+                                    <button class="btn btn-sm position-relative" :class="unreadStatus[rec.univ_id] ? 'btn-primary' : 'btn-outline-primary'" @click="openAdminChat(rec)">
+                                        <i class="bi bi-chat-dots-fill"></i> チャット
+                                        <span v-if="unreadStatus[rec.univ_id]" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                            ! <span class="visually-hidden">unread</span>
+                                        </span>
+                                    </button>
+                                </td>
+                                <td class="money-cell fw-bold text-primary" :title="rec.cost_detail" style="cursor: help; text-decoration: underline dotted;">{{ formatMoney(rec.total_cost) }}</td>
+                                
+                                <td v-for="key in adminStatusKeys" :key="key" style="min-width: 90px;">
+                                    <div :class="['status-badge', getAdminStatusClass(rec[key])]">
+                                        <div v-if="rec[key].hasReceipt">
+                                            <button class="btn btn-link p-0 text-decoration-none fw-bold" :class="rec[key].confirmed ? 'text-success' : 'text-white'" @click="showReceipt(rec, key)">
+                                                <i class="bi" :class="rec[key].confirmed ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill'"></i> {{ rec[key].confirmed ? '承認済' : '確認' }}
+                                            </button>
+                                        </div>
+                                        <div v-else>
+                                            <button class="btn btn-link p-0 text-decoration-none fw-bold" :class="rec[key].confirmed ? 'text-success' : 'text-muted'" @click="togglePaymentStatus(rec, key)">
+                                                <i class="bi" :class="rec[key].confirmed ? 'bi-check-circle-fill' : 'bi-circle'"></i> {{ rec[key].confirmed ? '承認済' : '未承認' }}
+                                            </button>
+                                            <div class="small mt-1" style="font-size:0.75rem;">ID: {{ rec[key].paymentId }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-center mt-1">
+                                        <a v-if="rec[key].rawObj.excel_url" :href="rec[key].rawObj.excel_url" target="_blank" class="btn btn-sm btn-outline-success py-0" style="font-size: 0.7rem;"><i class="bi bi-file-earmark-excel-fill"></i> 申込書DL</a>
+                                        <button v-else-if="rec[key].rawObj && (rec[key].rawObj.excel_url)" class="btn btn-sm btn-outline-secondary py-0" style="font-size: 0.7rem;" @click="openDetailModal(rec, key)"><i class="bi bi-list-ul"></i> 詳細</button>
+                                    </div>
+                                </td>
+                                <td style="max-width: 200px;">
+                                    <div class="text-truncate small" :title="rec.memo">{{ rec.memo }}</div>
+                                    <button class="btn btn-sm btn-outline-danger mt-1 w-100" @click="sendAlertEmail(rec)"><i class="bi bi-envelope"></i> 不備連絡</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div v-if="modal.show" class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header"><h5 class="modal-title">{{ modal.univName }} - {{ getCategoryName(modal.category) }}</h5><button type="button" class="btn-close" @click="closeModal"></button></div>
+                            <div class="modal-body text-center bg-dark"><img :src="modal.url" class="receipt-modal-img"></div>
+                            <div class="modal-footer justify-content-between">
+                                <div><a :href="modal.url" target="_blank" class="btn btn-outline-light btn-sm text-dark border-secondary">元画像を開く</a></div>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-secondary" @click="closeModal">閉じる</button>
+                                    <button v-if="!modal.targetRecord[modal.category].confirmed" class="btn btn-success btn-approve" @click="toggleApproval(true)"><i class="bi bi-check-lg"></i> 振込を確認・承認する</button>
+                                    <button v-else class="btn btn-outline-danger" @click="toggleApproval(false)">承認を取り消す</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div v-if="adminChatModal.show" class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title"><i class="bi bi-chat-dots"></i> チャット: {{ adminChatModal.univName }}</h5>
+                                <button type="button" class="btn-close btn-close-white" @click="adminChatModal.show = false"></button>
+                            </div>
+                            <div class="modal-body p-0">
+                                <div class="chat-container">
+                                    <div class="chat-messages" id="adminChatBox">
+                                        <div v-if="chatMessages.length === 0" class="text-center text-muted mt-5">メッセージはまだありません</div>
+                                        <div v-for="(msg, idx) in chatMessages" :key="idx" :class="['message-bubble', msg.sender === 'admin' ? 'msg-mine' : 'msg-other']">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div style="word-break: break-word;">{{ msg.content }}</div>
+                                                <button class="btn btn-link text-danger p-0 ms-2" style="font-size: 0.8rem; text-decoration: none;" @click="deleteChat(msg)"><i class="bi bi-trash"></i></button>
+                                            </div>
+                                            <div class="msg-info">{{ formatTimestamp(msg.timestamp) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="chat-input-area d-flex gap-2">
+                                        <textarea v-model="chatInput" class="form-control" rows="1" placeholder="メッセージを入力..." @keypress.enter.prevent="sendChat('admin')"></textarea>
+                                        <button class="btn btn-primary" @click="sendChat('admin')"><i class="bi bi-send"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else>
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom no-print">
+                    <div>
+                        <h4 class="m-0 d-inline-block me-3">登録管理システム</h4>
+                        <span class="badge bg-secondary me-2">{{ form.univ_name }}</span>
+                        <span class="small text-muted" v-if="form.representative">({{ form.representative }})</span>
+                    </div>
+                    <div><span class="me-3 small text-muted">{{ user.email }}</span><button @click="logout" class="btn btn-outline-danger btn-sm">ログアウト</button></div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3 col-lg-2 mb-4 no-print">
+                        <div class="list-group menu-list shadow-sm">
+                            <button class="list-group-item list-group-item-action fw-bold" :class="{active: activeTab === 'home'}" @click="activeTab = 'home'"><i class="bi bi-house-door-fill"></i> ホーム (連絡事項)</button>
+                            <div class="list-group-item bg-light fw-bold text-muted small">申請・申込メニュー</div>
+                            <button v-for="(cat, key) in categories" :key="key" class="list-group-item list-group-item-action" :class="{active: activeTab === key}" @click="activeTab = key">{{ cat.label }}</button>
+                            <div class="list-group-item bg-light fw-bold text-muted small mt-2">設定・その他</div>
+                            <button class="list-group-item list-group-item-action" :class="{active: activeTab === 'settlement'}" @click="activeTab = 'settlement'">⑫ 支払明細</button>
+                            <button class="list-group-item list-group-item-action" :class="{active: activeTab === 'account'}" @click="activeTab = 'account'">⑬ アカウント設定</button>
+                            <button class="list-group-item list-group-item-action fw-bold text-primary d-flex justify-content-between align-items-center" :class="{active: activeTab === 'chat'}" @click="activeTab = 'chat'; userHasUnread = false;">
+                                <span><i class="bi bi-chat-dots-fill"></i> ⑭ メッセージ (運営へ連絡)</span>
+                                <span v-if="userHasUnread" class="badge bg-danger rounded-pill">!</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="col-md-9 col-lg-10 mb-5">
+                        <div class="card shadow-sm main-content-card">
+                            <div class="card-body p-4">
+                                <div v-if="activeTab === 'home'">
+                                    <h4 class="mb-4 text-primary"><i class="bi bi-info-circle-fill"></i> 連絡事項・ニュース</h4>
+                                    <div v-if="newsList.length === 0" class="alert alert-secondary">現在、連絡事項はありません。</div>
+                                    <div v-else class="list-group">
+                                        <div v-for="(news, idx) in newsList" :key="idx" class="list-group-item">
+                                            <div class="d-flex w-100 justify-content-between"><h5 class="mb-1 fw-bold">{{ news.title }}</h5><small class="text-muted">{{ new Date(news.date).toLocaleDateString() }}</small></div>
+                                            <p class="mb-1 mt-2" style="white-space: pre-wrap;">{{ news.content }}</p>
+                                            <div v-if="news.url" class="mt-2 border-top pt-2"><a :href="news.url" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-paperclip"></i> 添付ファイルを開く</a></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div v-if="activeTab === 'chat'">
+                                    <h4 class="mb-4 text-primary"><i class="bi bi-chat-dots-fill"></i> 運営とのメッセージ</h4>
+                                    <div class="alert alert-info small"><i class="bi bi-info-circle"></i> 個別の連絡や質問はこちらから送信してください。</div>
+                                    <div class="chat-container">
+                                        <div class="chat-messages" id="userChatBox">
+                                            <div v-if="chatMessages.length === 0" class="text-center text-muted mt-5">メッセージはまだありません</div>
+                                            <div v-for="(msg, idx) in chatMessages" :key="idx" :class="['message-bubble', msg.sender !== 'admin' ? 'msg-mine' : 'msg-other']">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div style="word-break: break-word;">{{ msg.content }}</div>
+                                                    <button v-if="msg.sender !== 'admin'" class="btn btn-link text-danger p-0 ms-2" style="font-size: 0.8rem; text-decoration: none;" @click="deleteChat(msg)"><i class="bi bi-trash"></i></button>
+                                                </div>
+                                                <div class="msg-info">{{ formatTimestamp(msg.timestamp) }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="chat-input-area d-flex gap-2">
+                                            <textarea v-model="chatInput" class="form-control" rows="1" placeholder="メッセージを入力..." @keypress.enter.prevent="sendChat('user')"></textarea>
+                                            <button class="btn btn-primary" @click="sendChat('user')"><i class="bi bi-send"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div v-for="(catName, catKey) in categories" :key="catKey">
+                                    <div v-if="activeTab === catKey">
+                                        <div class="d-flex justify-content-between align-items-center mb-3"><h4 class="text-primary"><i class="bi bi-folder2-open"></i> {{ catName.label }}</h4></div>
+                                        <div class="alert alert-info small"><i class="bi bi-exclamation-circle-fill"></i> 申込用紙(Excel)をアップロードし、内訳を入力してください。</div>
+                                        <div class="excel-upload-area">
+                                            <label class="form-label fw-bold">申込ファイル(Excel)のアップロード</label>
+                                            <input type="file" class="form-control w-75 mx-auto" accept=".xlsx, .xls" @change="uploadExcel($event, catKey)">
+                                            <div v-if="entry[catKey].excel_url" class="mt-3"><span class="badge bg-success"><i class="bi bi-file-earmark-excel"></i> アップロード済み</span><a :href="entry[catKey].excel_url" target="_blank" class="d-block mt-1 small">確認する</a></div>
+                                            <div v-if="isUploading" class="spinner-border spinner-border-sm mt-2 text-primary"></div>
+                                        </div>
+
+                                        <div class="count-input-group mb-4">
+                                            <h6 class="border-bottom pb-2 mb-3">参加・登録数 入力</h6>
+                                            <div class="row g-3">
+                                                <div v-if="catKey === 'reg_fee'" class="row g-3"><div class="col-md-6"><label>選手登録 (¥1,500)</label><div class="input-group"><input type="number" v-model.number="entry.reg_fee.count_player" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-6"><label>指導者登録 (¥1,500)</label><div class="input-group"><input type="number" v-model.number="entry.reg_fee.count_coach" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
+                                                <div v-if="catKey === 'training'" class="row g-3"><div class="col-md-4"><label>一般 (¥5,000)</label><div class="input-group"><input type="number" v-model.number="entry.training.count_general" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>指導者会員 (¥3,000)</label><div class="input-group"><input type="number" v-model.number="entry.training.count_member" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>小中高生 (¥500)</label><div class="input-group"><input type="number" v-model.number="entry.training.count_student" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
+                                                <div v-if="catKey === 'class_tourney'" class="row g-3"><div class="col-md-4"><label>ビギナーズ (¥2,000/人)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_beginner" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>チャレンジ (¥2,000/人)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_challenge" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>ミックス複 (¥4,000/組)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_mix" class="form-control" min="0"><span class="input-group-text">組</span></div></div></div>
+                                                <div v-if="catKey === 'wakaba'" class="row g-3"><div class="col-md-6"><label>参加チーム (¥15,000)</label><div class="input-group"><input type="number" v-model.number="entry.wakaba.count_team" class="form-control" min="0"><span class="input-group-text">チーム</span></div></div></div>
+                                                <div v-if="catKey === 'abc'" class="row g-3"><div class="col-md-6"><label>シングルス (¥2,000)</label><div class="input-group"><input type="number" v-model.number="entry.abc.count_single" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
+                                                <div v-if="catKey === 'umpire'" class="row g-3"><div class="col-md-6"><label>受講者数 (¥1,000)</label><div class="input-group"><input type="number" v-model.number="entry.umpire.count_person" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
+                                                <div v-if="catKey === 'chairman'" class="row g-3"><div class="col-md-6"><label>ダブルス (¥4,000)</label><div class="input-group"><input type="number" v-model.number="entry.chairman.count_double" class="form-control" min="0"><span class="input-group-text">組</span></div></div></div>
+                                                <div v-if="catKey === 'kanto'" class="row g-3"><div class="col-md-6"><label>シングルス (¥2,500)</label><div class="input-group"><input type="number" v-model.number="entry.kanto.count_single" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-6"><label>ダブルス (¥5,000)</label><div class="input-group"><input type="number" v-model.number="entry.kanto.count_double" class="form-control" min="0"><span class="input-group-text">組</span></div></div></div>
+                                                <div v-if="catKey === 'rookie'" class="row g-3"><div class="col-md-6"><label>シングルス (¥2,000)</label><div class="input-group"><input type="number" v-model.number="entry.rookie.count_single" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
+                                                <div v-if="catKey === 'fed_doubles'" class="row g-3"><div class="col-md-6"><label>ダブルス (¥4,000)</label><div class="input-group"><input type="number" v-model.number="entry.fed_doubles.count_double" class="form-control" min="0"><span class="input-group-text">組</span></div></div></div>
+                                                <div v-if="catKey === 'add_reg'" class="row g-3">
+                                                    <div class="col-12 mb-2"><label class="form-label fw-bold bg-light p-2 rounded w-100">登録時期を選択してください</label><div class="d-flex gap-4 ms-2"><div class="form-check"><input class="form-check-input" type="radio" v-model="entry.add_reg.period" value="early" id="ar1"><label class="form-check-label" for="ar1">関東予選前まで (¥1,500)</label></div><div class="form-check"><input class="form-check-input" type="radio" v-model="entry.add_reg.period" value="late" id="ar2"><label class="form-check-label" for="ar2">1月 新人戦 (¥500)</label></div></div></div>
+                                                    <div class="col-md-6"><label>選手登録</label><div class="input-group"><input type="number" v-model.number="entry.add_reg.count_player" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-6"><label>指導者登録</label><div class="input-group"><input type="number" v-model.number="entry.add_reg.count_coach" class="form-control" min="0"><span class="input-group-text">名</span></div></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    
+                                        <div class="payment-box">
+                                            <div class="text-center">
+                                                <h5 class="text-dark mb-1">合計支払額: <strong>{{ formatMoney(calculateCategoryTotal(catKey)) }}</strong></h5>
+                                                <p class="mb-2 text-muted small">下記番号を振込名義の前に入力してください</p>
+                                                <div class="payment-id">{{ entry[catKey].payment_id }}</div>
+                                                <div class="mt-2 text-danger fw-bold">振込名義: {{ entry[catKey].payment_id }} {{ form.univ_name }}</div>
+                                                
+                                                <div class="receipt-area">
+                                                    <h6 class="small fw-bold mb-3">振込明細の写真</h6>
+                                                    <div v-if="entry[catKey].receipt_url">
+                                                        <span class="badge badge-uploaded mb-2"><i class="bi bi-check-circle-fill"></i> 登録済み</span>
+                                                        <div class="mb-3"><img :src="entry[catKey].receipt_url" class="receipt-preview"></div>
+                                                        <button class="btn btn-sm btn-outline-danger" @click="deleteReceipt(catKey)"><i class="bi bi-trash"></i> 画像を削除して再アップロード</button>
+                                                        <div class="mt-3 border-top pt-2"><button class="btn btn-outline-dark w-100" @click="openReceipt(catKey)"><i class="bi bi-receipt"></i> 領収書を発行</button></div>
+                                                    </div>
+                                                    <div v-else>
+                                                        <span class="badge badge-missing mb-2">未登録</span>
+                                                        <div class="mt-2"><input type="file" class="form-control form-control-sm w-75 mx-auto" accept="image/*" @change="uploadReceipt($event, catKey)"><div v-if="isUploading" class="spinner-border spinner-border-sm mt-2"></div></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    </div>
+                                
+                                <div v-if="categories[activeTab]" class="save-area">
+                                    <button @click="saveData" class="btn btn-primary btn-lg px-5" :disabled="isSaving"><i class="bi bi-save"></i> データ保存</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="activeTab === 'settlement'">
+                            <div class="d-flex justify-content-between align-items-center mb-4 no-print"><h4><i class="bi bi-file-earmark-spreadsheet-fill"></i> ⑪ 支払明細</h4><button onclick="window.print()" class="btn btn-dark"><i class="bi bi-printer"></i> 印刷 / PDF保存</button></div>
+                            <div class="report-container">
+                                <h3 class="text-center mb-4">令和7年度 神奈川県小学生バドミントン連盟 支払明細</h3>
+                                <div class="d-flex justify-content-between mb-3"><h5>クラブ名: <u>{{ form.univ_name }}</u></h5><h5>日付: <u>{{ new Date().toLocaleDateString() }}</u></h5></div>
+                                <table class="report-table"><colgroup><col class="col-item"><col class="col-detail"><col class="col-price"></colgroup><thead><tr><th>項目</th><th>詳細・内訳</th><th>金額</th></tr></thead>
+                                    <tbody>
+                                        <tr v-for="(cat, key) in categories" :key="key"><td>{{ cat.label }}</td><td>{{ generateDetailString(key, entry[key]) }}</td><td class="col-price">{{ formatMoney(calculateCategoryTotal(key)) }}</td></tr>
+                                    </tbody>
+                                    <tfoot><tr><th colspan="2" class="text-center fs-5">合計</th><th class="col-price fs-4">{{ formatMoney(grandTotal) }}</th></tr></tfoot>
+                                </table>
+                                <div class="mt-5"><h6>備考・振込記録</h6><textarea v-model="memo" class="form-control d-print-none" rows="5"></textarea><div class="d-none d-print-block memo-box">{{ memo }}</div><div class="save-area d-print-none"><button @click="saveData" class="btn btn-primary btn-lg px-5">保存</button></div></div>
+                            </div>
+                        </div>
+
+                        <div v-if="activeTab === 'account'">
+                            <h4><i class="bi bi-gear-fill"></i> ⑫ アカウント設定</h4>
+                            <div class="card mt-4 border-info"><div class="card-header bg-info bg-opacity-10 fw-bold">登録情報の変更</div><div class="card-body"><div class="mb-3"><label class="form-label fw-bold">代表者氏名</label><input type="text" v-model="form.representative" class="form-control"></div><button class="btn btn-info text-white fw-bold" @click="saveData(false)">氏名を更新</button></div></div>
+                            <div class="card mt-4 border-warning">
+                                <div class="card-header bg-warning bg-opacity-10 fw-bold">メールアドレス・パスワードの変更</div>
+                                <div class="card-body">
+                                    <div class="mb-3"><label class="form-label">現在のメールアドレス</label><input type="text" class="form-control" :value="user.email" disabled></div><hr>
+                                    <div class="mb-3"><label class="form-label fw-bold">新しいメールアドレス</label><input type="email" v-model="account.newEmail" class="form-control"></div>
+                                    <div class="mb-3"><label class="form-label fw-bold">新しいパスワード</label><input type="password" v-model="account.newPass" class="form-control"></div>
+                                    <button class="btn btn-warning text-dark fw-bold" @click="updateAccount">変更内容を保存</button>
+                                </div>
+                            </div>
+                            <div class="card mt-5 border-danger">
+                                <div class="card-header bg-danger text-white fw-bold">退会・データ削除</div>
+                                <div class="card-body">
+                                    <p class="text-danger small">※アカウントを削除すると、このメールアドレスでログインできなくなります。<br>※再登録する場合は、新規登録からやり直してください。</p>
+                                    <button class="btn btn-outline-danger w-100" @click="deleteAccount">アカウントを完全に削除する</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div v-if="detailModal.show" class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-content"><div class="modal-header bg-light py-2"><h6 class="modal-title fw-bold">{{ detailModal.title }}</h6><button type="button" class="btn-close small" @click="detailModal.show = false"></button></div><div class="modal-body"><div class="mb-3 p-3 bg-light border rounded"><strong>申込内容:</strong><br><span style="white-space: pre-wrap;">{{ detailModal.data.text }}</span></div><div class="text-center text-muted small">詳細はダウンロードしたExcelファイルを確認してください</div></div><div class="modal-footer py-1"><button type="button" class="btn btn-sm btn-secondary" @click="detailModal.show = false">閉じる</button></div></div>
+            </div>
+        </div>
+        <div v-if="receiptData.show" class="modal fade show d-block" id="receiptModal" tabindex="-1" style="background: rgba(0,0,0,0.5);"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">領収書プレビュー</h5><button type="button" class="btn-close" @click="receiptData.show = false"></button></div><div class="modal-body bg-light p-4"><div class="receipt-layout mx-auto" style="max-width: 700px;"><div class="text-center"><span class="receipt-title">領　収　証</span></div><div class="d-flex justify-content-between align-items-end mt-4"><h4 class="mb-0"><u>{{ form.univ_name }} 様</u></h4><div>発行日: {{ new Date().toLocaleDateString('ja-JP', {year:'numeric', month:'long', day:'numeric'}) }}</div></div><div class="receipt-amount">{{ formatMoney(receiptData.amount) }}-</div><div class="text-center small text-muted">（消費税等を含む）</div><div class="receipt-detail"><p>但　{{ receiptData.title }} として<br>上記正に領収いたしました。</p></div><div class="issuer-info"><div class="hanko-box"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><rect x="2" y="2" width="96" height="96" rx="2" ry="2" fill="none" stroke="#d00" stroke-width="2" /><rect x="6" y="6" width="88" height="88" rx="1" ry="1" fill="none" stroke="#d00" stroke-width="1" /><text x="50" y="25" font-family="'Hiragino Mincho ProN', 'MS Mincho', serif" font-weight="bold" font-size="20" fill="#d00" text-anchor="middle">神奈川県</text><text x="50" y="55" font-family="'Hiragino Mincho ProN', 'MS Mincho', serif" font-weight="bold" font-size="20" fill="#d00" text-anchor="middle">小学生</text><text x="50" y="85" font-family="'Hiragino Mincho ProN', 'MS Mincho', serif" font-weight="bold" font-size="20" fill="#d00" text-anchor="middle">連盟</text></svg></div><h5>神奈川県小学生バドミントン連盟</h5></div></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" @click="receiptData.show = false">閉じる</button><button type="button" class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer"></i> 印刷 / PDF保存</button></div></div></div></div>
+
+    </div>
+
+    <script>
+        // ★★★ ここをご自身のAPIキーに書き換えてください ★★★
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyzjgSOOYlSnQ20H6LVZW9SZsK4I0wqh9GxEXure0qUD2Fm_Iqlrd9AOY8DrxSOx0lXEQ/exec";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyCAQorZttgQhUzM30-gHW18MvfcDwtTSUc",
+          authDomain: "kanagawa-jr-badminton.firebaseapp.com",
+          projectId: "kanagawa-jr-badminton",
+          storageBucket: "kanagawa-jr-badminton.firebasestorage.app",
+          messagingSenderId: "316845745244",
+          appId: "1:316845745244:web:362cb9789709cd5113f299",
+        };
+        // ★★★★★★★★★★★★★★★★★★★★★★★★★★★
+
+        const ADMIN_ID = "admin";
+        const ADMIN_PASS = "admin1234"; 
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore(); // Firestore初期化
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    user: null, isAdmin: false, authEmail: '', authPass: '', isRegisterMode: false,
+                    regForm: { univ_id: '', representative: '' }, regError: '', regUnivName: '', searchQuery: '',
+                    isLoading: false, isSaving: false, isUploading: false,
+                    masterData: [], savedRecords: [], newsList: [],
+                    activeTab: 'home',
+                    adminNews: { date: '', title: '', content: '', url: '' }, isUploadingNews: false,
+                    account: { newEmail: '', newPass: '' },
+                    form: { univ_id: '', univ_name: '', representative: '' }, memo: '',
+                    categories: {
+                        reg_fee: { label: "① 連盟登録", id_suffix: "01" },
+                        training: { label: "② 指導者・ジュニア講習会", id_suffix: "02" },
+                        class_tourney: { label: "③ クラス別大会", id_suffix: "03" },
+                        wakaba: { label: "④ 若葉カップ神奈川県予選", id_suffix: "04" },
+                        abc: { label: "⑤ ABC大会神奈川県予選", id_suffix: "05" },
+                        umpire: { label: "⑥ 審判講習会", id_suffix: "06" },
+                        chairman: { label: "⑦ 会長杯ダブルス", id_suffix: "07" },
+                        kanto: { label: "⑧ 関東予選", id_suffix: "08" },
+                        rookie: { label: "⑨ 新人戦", id_suffix: "09" },
+                        fed_doubles: { label: "⑩ 連盟ダブルス", id_suffix: "10" },
+                        add_reg: { label: "⑪ 追加登録", id_suffix: "11" }
+                    },
+                    entry: {
+                        reg_fee: { excel_url: '', count_player:0, count_coach:0, payment_id: '', receipt_url: '' },
+                        training: { excel_url: '', count_general:0, count_member:0, count_student:0, payment_id: '', receipt_url: '' },
+                        class_tourney: { excel_url: '', count_beginner:0, count_challenge:0, count_mix:0, payment_id: '', receipt_url: '' },
+                        wakaba: { excel_url: '', count_team:0, payment_id: '', receipt_url: '' },
+                        abc: { excel_url: '', count_single:0, payment_id: '', receipt_url: '' },
+                        umpire: { excel_url: '', count_person:0, payment_id: '', receipt_url: '' },
+                        chairman: { excel_url: '', count_double:0, payment_id: '', receipt_url: '' },
+                        kanto: { excel_url: '', count_single:0, count_double:0, payment_id: '', receipt_url: '' },
+                        rookie: { excel_url: '', count_single:0, payment_id: '', receipt_url: '' },
+                        fed_doubles: { excel_url: '', count_double:0, payment_id: '', receipt_url: '' },
+                        add_reg: { excel_url: '', period:'early', count_player:0, count_coach:0, payment_id: '', receipt_url: '' }
+                    },
+                    adminFilterType: 'all', adminSearchQuery: '',
+                    adminStatusKeys: ['reg_fee', 'training', 'class_tourney', 'wakaba', 'abc', 'umpire', 'chairman', 'kanto', 'rookie', 'fed_doubles', 'add_reg'],
+                    selectedTournament: 'reg_fee', isZipping: false,
+                    modal: { show: false, univName: '', category: '', url: '' },
+                    detailModal: { show: false, title: '', type: '', data: null },
+                    receiptData: { show: false, amount: 0, title: '' },
+                    
+                    // 未読管理用
+                    unreadStatus: {},     // 管理者用: { 'univ_id': true/false }
+                    userHasUnread: false, // ユーザー用: true/false
+
+                    // チャット用データ
+                    chatMessages: [],
+                    chatInput: '',
+                    chatUnsubscribe: null,
+                    adminChatModal: { show: false, univId: '', univName: '' }
+                }
+            },
+            computed: {
+                filteredUnivList() {
+                    if (!this.masterData.length) return [];
+                    let list = this.masterData;
+                    if (this.searchQuery) { const q = this.searchQuery.toLowerCase(); list = list.filter(m => m.univ_name.toLowerCase().includes(q)); }
+                    return list;
+                },
+                grandTotal() {
+                    let total = 0;
+                    for (const key in this.categories) total += this.calculateCategoryTotal(key);
+                    return total;
+                },
+                adminRecords() {
+                    if (!this.savedRecords) return [];
+                    return this.savedRecords.map(r => this.processAdminRecord(r));
+                },
+                filteredAdminRecords() {
+                    let list = this.adminRecords;
+                    if (this.adminSearchQuery) list = list.filter(r => r.univ_name.includes(this.adminSearchQuery));
+                    return list.sort((a,b) => a.univ_id - b.univ_id);
+                },
+                adminTotalRevenue() { return this.adminRecords.reduce((sum, r) => sum + (parseInt(r.total_cost) || 0), 0); }
+            },
+            watch: {
+                // ユーザー側: タブがチャットに切り替わったら初期化
+                activeTab(newVal) {
+                    if (newVal === 'chat' && this.form.univ_id && !this.isAdmin) {
+                        this.initChat(this.form.univ_id);
+                        setTimeout(() => this.scrollToBottom('userChatBox'), 500);
+                    }
+                }
+            },
+            created() {
+                this.isLoading = true;
+                const url = GAS_API_URL + "?t=" + new Date().getTime();
+                fetch(url).then(r => r.json()).then(d => {
+                    this.masterData = d.master; this.savedRecords = d.records; this.newsList = d.news || []; this.isLoading = false;
+                    
+                    firebase.auth().onAuthStateChanged(u => { 
+                        this.user = u; 
+                        if(u) {
+                            this.initUserData(u.email); 
+                            
+                            // ユーザー用の未読監視を開始
+                            if (!this.isAdmin && this.form.univ_id) {
+                                this.startUserUnreadListener(this.form.univ_id);
+                            }
+                        }
+                    });
+
+                    // 管理者用の未読監視を開始（データロード後少し待ってから実行）
+                    setTimeout(() => {
+                        // 管理者としてログインしている、またはローカルで管理者フラグが立っている場合
+                        if (this.isAdmin || (this.user && this.user.email === ADMIN_ID)) {
+                            this.startAdminUnreadListeners();
+                        }
+                    }, 2000);
+
+                }).catch(e => { console.error(e); this.isLoading = false; });
+            },
+
+
+
+
+            methods: {
+                formatMoney(v) { if (isNaN(v) || v === null || v === undefined) return "¥0"; return "¥" + v.toLocaleString(); },
+                calculateCategoryTotal(key) {
+                    const e = this.entry[key]; if (!e) return 0;
+                    switch(key) {
+                        case 'reg_fee': return (e.count_player||0)*1500 + (e.count_coach||0)*1500;
+                        case 'training': return (e.count_general||0)*5000 + (e.count_member||0)*3000 + (e.count_student||0)*500;
+                        case 'class_tourney': return (e.count_beginner||0)*2000 + (e.count_challenge||0)*2000 + (e.count_mix||0)*4000;
+                        case 'wakaba': return (e.count_team||0)*15000;
+                        case 'abc': return (e.count_single||0)*2000;
+                        case 'umpire': return (e.count_person||0)*1000;
+                        case 'chairman': return (e.count_double||0)*4000;
+                        case 'kanto': return (e.count_single||0)*2500 + (e.count_double||0)*5000;
+                        case 'rookie': return (e.count_single||0)*2000;
+                        case 'fed_doubles': return (e.count_double||0)*4000;
+                        case 'add_reg': const price=(e.period==='late')?500:1500; return ((e.count_player||0)+(e.count_coach||0))*price;
+                        default: return 0;
+                    }
+                },
+                generateDetailString(key, e) {
+                    if (!e) return "-"; let parts = [];
+                    switch(key) {
+                        case 'reg_fee': if(e.count_player) parts.push(`選手:${e.count_player}`); if(e.count_coach) parts.push(`指導者:${e.count_coach}`); break;
+                        case 'training': if(e.count_general) parts.push(`一般:${e.count_general}`); if(e.count_member) parts.push(`会員:${e.count_member}`); if(e.count_student) parts.push(`学生:${e.count_student}`); break;
+                        case 'class_tourney': if(e.count_beginner) parts.push(`ビギナー:${e.count_beginner}`); if(e.count_challenge) parts.push(`チャレ:${e.count_challenge}`); if(e.count_mix) parts.push(`Mix:${e.count_mix}`); break;
+                        case 'wakaba': if(e.count_team) parts.push(`${e.count_team}チーム`); break;
+                        case 'abc': if(e.count_single) parts.push(`${e.count_single}名`); break;
+                        case 'umpire': if(e.count_person) parts.push(`${e.count_person}名`); break;
+                        case 'chairman': if(e.count_double) parts.push(`${e.count_double}組`); break;
+                        case 'kanto': if(e.count_single) parts.push(`S:${e.count_single}`); if(e.count_double) parts.push(`D:${e.count_double}`); break;
+                        case 'rookie': if(e.count_single) parts.push(`S:${e.count_single}`); break;
+                        case 'fed_doubles': if(e.count_double) parts.push(`D:${e.count_double}`); break;
+                        case 'add_reg': const label=(e.period==='late')?"1月":"関東前"; if(e.count_player) parts.push(`[${label}]選手:${e.count_player}`); if(e.count_coach) parts.push(`[${label}]指導者:${e.count_coach}`); break;
+                    }
+                    return parts.length > 0 ? parts.join(", ") : "0";
+                },
+                
+                // Firestore チャット機能（既読処理修正済み）
+                initChat(univId) {
+                    if (this.chatUnsubscribe) this.chatUnsubscribe();
+                    this.chatMessages = [];
+                    const strUnivId = String(univId); // IDを文字列に統一
+
+                    this.chatUnsubscribe = db.collection('chats').doc(strUnivId).collection('messages')
+                        .orderBy('timestamp', 'asc')
+                        .onSnapshot(snapshot => {
+                            this.chatMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                            this.$nextTick(() => {
+                                this.scrollToBottom(this.isAdmin ? 'adminChatBox' : 'userChatBox');
+                            });
+                            
+                            // メッセージがある場合、最新のものを「既読」としてブラウザに保存
+                            if (this.chatMessages.length > 0) {
+                                const lastMsg = this.chatMessages[this.chatMessages.length - 1];
+                                
+                                if (this.isAdmin) {
+                                    // 管理者は開いたら即既読
+                                    localStorage.setItem('admin_read_' + strUnivId, lastMsg.id);
+                                    // 即座にバッジ表示を消すためにステータス更新
+                                    this.unreadStatus[strUnivId] = false; 
+                                } else if (this.activeTab === 'chat') {
+                                    // ユーザーは「チャットタブ」を開いている時のみ既読
+                                    localStorage.setItem('user_read_' + strUnivId, lastMsg.id);
+                                    this.userHasUnread = false;
+                                }
+                            }
+                        });
+                },
+                
+                deleteChat(msg) {
+                    if(!confirm("このメッセージを削除しますか？")) return;
+                    const targetId = this.isAdmin ? this.adminChatModal.univId : this.form.univ_id;
+                    db.collection('chats').doc(String(targetId)).collection('messages').doc(msg.id).delete()
+                        .catch(e => alert("削除エラー: " + e.message));
+                },
+
+                // 管理者用 未読監視
+                startAdminUnreadListeners() {
+                    if (!this.savedRecords) return;
+                    this.savedRecords.forEach(rec => {
+                        const strUnivId = String(rec.univ_id);
+                        db.collection('chats').doc(strUnivId).collection('messages')
+                            .orderBy('timestamp', 'desc').limit(1)
+                            .onSnapshot(snapshot => {
+                                if (!snapshot.empty) {
+                                    const lastMsg = snapshot.docs[0].data();
+                                    const lastReadId = localStorage.getItem('admin_read_' + strUnivId);
+                                    
+                                    // 「最後の発言者が管理者以外」かつ「最後に読んだIDと違う」場合に未読とする
+                                    if (lastMsg.sender !== 'admin' && lastMsg.id !== lastReadId && snapshot.docs[0].id !== lastReadId) {
+                                        this.unreadStatus[strUnivId] = true;
+                                    } else {
+                                        this.unreadStatus[strUnivId] = false;
+                                    }
+                                } else {
+                                    this.unreadStatus[strUnivId] = false;
+                                }
+                            });
+                    });
+                },
+
+                // ユーザー用 未読監視
+                startUserUnreadListener(univId) {
+                    const strUnivId = String(univId);
+                    db.collection('chats').doc(strUnivId).collection('messages')
+                        .orderBy('timestamp', 'desc').limit(1)
+                        .onSnapshot(snapshot => {
+                            if (!snapshot.empty) {
+                                const lastMsg = snapshot.docs[0].data();
+                                const lastReadId = localStorage.getItem('user_read_' + strUnivId);
+                                
+                                // 「最後の発言者が管理者」かつ「最後に読んだIDと違う」かつ「今チャットを見ていない」場合に未読
+                                if (lastMsg.sender === 'admin' && snapshot.docs[0].id !== lastReadId && this.activeTab !== 'chat') {
+                                    this.userHasUnread = true;
+                                }
+                            }
+                        });
+                },
+
+                sendChat(sender) {
+                    if (!this.chatInput.trim()) return;
+                    const univId = this.isAdmin ? this.adminChatModal.univId : this.form.univ_id;
+                    if (!univId) {
+                        alert("エラー: クラブIDが取得できません。ページを再読み込みしてください。");
+                        return;
+                    }
+                    const strUnivId = String(univId);
+
+                    db.collection('chats').doc(strUnivId).collection('messages').add({
+                        content: this.chatInput,
+                        sender: sender,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    }).then((docRef) => {
+                        this.chatInput = '';
+                        // 送信した自分のメッセージは即「既読」扱いにする
+                        if (this.isAdmin) {
+                            localStorage.setItem('admin_read_' + strUnivId, docRef.id);
+                            this.unreadStatus[strUnivId] = false;
+                        } else {
+                            localStorage.setItem('user_read_' + strUnivId, docRef.id);
+                        }
+                        this.scrollToBottom(this.isAdmin ? 'adminChatBox' : 'userChatBox');
+                    }).catch(e => console.error(e));
+                },
+                openAdminChat(rec) {
+                    this.adminChatModal.univId = rec.univ_id;
+                    this.adminChatModal.univName = rec.univ_name;
+                    this.adminChatModal.show = true;
+                    this.initChat(rec.univ_id);
+                },
+                formatTimestamp(ts) {
+                    if (!ts) return '';
+                    const d = ts.toDate();
+                    return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+                },
+                scrollToBottom(elemId) {
+                    const el = document.getElementById(elemId);
+                    if(el) el.scrollTop = el.scrollHeight;
+                },
+
+                // ファイルアップロード・削除系
+                uploadExcel(event, category) {
+                    const file = event.target.files[0]; if (!file) return; this.isUploading = true;
+                    const path = `excel/${this.form.univ_id}/${category}_${Date.now()}_${file.name}`;
+                    firebase.storage().ref().child(path).put(file).then(s => s.ref.getDownloadURL()).then(url => { this.entry[category].excel_url = url; this.saveData(true); this.isUploading = false; alert("ファイルをアップロードしました"); }).catch(e => { alert("アップロード失敗: " + e.message); this.isUploading = false; });
+                },
+                uploadReceipt(event, category) {
+                    const file = event.target.files[0]; if (!file) return; this.isUploading = true;
+                    const path = `receipts/${this.form.univ_id}/${category}_${Date.now()}`;
+                    firebase.storage().ref().child(path).put(file).then(s => s.ref.getDownloadURL()).then(url => { this.entry[category].receipt_url = url; this.saveData(true); this.isUploading = false; }).catch(e => { alert("アップロード失敗: " + e.message); this.isUploading = false; });
+                },
+                deleteReceipt(category) {
+                    if(!confirm("画像を削除しますか？")) return;
+                    this.entry[category].receipt_url = ''; this.saveData(true);
+                },
+                uploadNewsFile(event) {
+                    const file = event.target.files[0]; if (!file) return; this.isUploadingNews = true;
+                    const path = `news/${Date.now()}_${file.name}`;
+                    firebase.storage().ref().child(path).put(file).then(s => s.ref.getDownloadURL()).then(url => { this.adminNews.url = url; this.isUploadingNews = false; }).catch(e => { alert("アップロード失敗: " + e.message); this.isUploadingNews = false; });
+                },
+
+                updateAccount() {
+                    const user = firebase.auth().currentUser; const promises = [];
+                    if (this.account.newEmail) promises.push(user.updateEmail(this.account.newEmail));
+                    if (this.account.newPass) promises.push(user.updatePassword(this.account.newPass));
+                    Promise.all(promises).then(() => { alert("アカウント情報を更新しました"); if (this.account.newEmail) this.saveData(true); this.account.newEmail = ''; this.account.newPass = ''; }).catch(err => { alert("エラー: " + err.message); });
+                },
+                deleteAccount() {
+                    if (!confirm("本当にアカウントを削除しますか？\n\nこの操作は取り消せません。\n再登録が必要になります。")) return;
+                    const user = firebase.auth().currentUser; const email = user.email;
+                    const payload = { action: 'delete_user', univ_id: this.form.univ_id, email: email };
+                    fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(payload) }).catch(e => console.error("GAS delete request failed", e));
+                    user.delete().then(() => { alert("アカウントを削除しました。"); location.reload(); }).catch((error) => { if (error.code === 'auth/requires-recent-login') { alert("セキュリティのため、再ログインしてからもう一度お試しください。"); this.logout(); } else { alert("削除に失敗しました: " + error.message); } });
+                },
+
+                toggleRegisterMode() { this.isRegisterMode=true; this.resetSelection(); },
+                resetSelection() { this.regForm.univ_id=''; this.regUnivName=''; this.regForm.representative=''; this.regError=''; this.searchQuery=''; },
+                selectUniv(u) { const t=this.savedRecords.some(r=>r.univ_id==u.univ_id); if(t){this.regError="登録済み";this.regForm.univ_id='';}else{this.regError='';this.regForm.univ_id=u.univ_id;this.regUnivName=u.univ_name;} },
+                
+                login() {
+                    // 管理者ログイン処理
+                    if (this.authEmail === ADMIN_ID && this.authPass === ADMIN_PASS) {
+                        // 匿名ログインを実行してFirebaseの認証を通す
+                        firebase.auth().signInAnonymously()
+                            .then(() => {
+                                this.isAdmin = true;
+                                this.authEmail = '';
+                                this.authPass = '';
+                            })
+                            .catch((e) => {
+                                alert("管理者ログインエラー: " + e.message);
+                            });
+                        return;
+                    }
+                    // 一般ユーザーログイン処理
+                    firebase.auth().signInWithEmailAndPassword(this.authEmail, this.authPass)
+                        .catch(e => alert(e.message));
+                },
+
+                register() { if(this.regError||!this.regUnivName||!this.regForm.representative) return alert("入力内容に不備があります"); if(!confirm("登録しますか？"))return; firebase.auth().createUserWithEmailAndPassword(this.authEmail,this.authPass).then(c=>{ this.form.univ_id=this.regForm.univ_id; this.form.univ_name=this.regUnivName; this.form.representative=this.regForm.representative; this.saveData(true, this.authPass); }).catch(e=>alert(e.message)); },
+                logout() { if(this.isAdmin) { this.isAdmin = false; this.chatMessages = []; } else { firebase.auth().signOut(); } },
+                initUserData(em) {
+                    const d = this.savedRecords.find(r => r.email === em);
+                    if (d) {
+                        this.form.univ_id = d.univ_id; this.form.univ_name = d.univ_name; this.form.representative = d.representative || ''; if (d.memo) this.memo = d.memo;
+                        const safeParse = (json, defaultVal) => { if (typeof json === 'object' && json !== null) return json; try { return json ? JSON.parse(json) : defaultVal; } catch (e) { return defaultVal; } };
+                        for (const key in this.categories) {
+                            if (d[key]) {
+                                const parsed = safeParse(d[key], {}); this.entry[key] = { ...this.entry[key], ...parsed };
+                                if (!this.entry[key].payment_id) this.entry[key].payment_id = this.form.univ_id + this.categories[key].id_suffix;
+                            } else { this.entry[key].payment_id = this.form.univ_id + this.categories[key].id_suffix; }
+                        }
+                        // チャット初期化
+                        this.initChat(d.univ_id);
+                    }
+                },
+                saveDataPayload(password = null) {
+                    const p = { univ_id:this.form.univ_id, email:this.user.email, univ_name:this.form.univ_name, representative:this.form.representative, memo: this.memo, total_cost:this.grandTotal };
+                    for (const key in this.categories) p[key] = this.entry[key];
+                    if (password) p.password = password;
+                    return fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(p) }).then(r=>r.json());
+                },
+                saveData(isSilent = false, password = null) { this.isSaving = true; this.saveDataPayload(password).then(d => { if(!isSilent) alert("保存しました"); this.isSaving=false; }).catch(e=>{alert("エラー");this.isSaving=false;}); },
+                processAdminRecord(raw) {
+                    const safeParse = (json, def) => { try { return json ? JSON.parse(json) : def; } catch(e) { return def; } };
+                    const result = { univ_id: raw.univ_id, univ_name: raw.univ_name, total_cost: raw.total_cost, memo: raw.memo, cost_detail: "", raw_data: raw };
+                    let details = [];
+                    for (const key in this.categories) {
+                        const rawObj = safeParse(raw[key], {});
+                        result[key] = { hasPaymentId: !!rawObj.payment_id, hasReceipt: !!rawObj.receipt_url, receiptUrl: rawObj.receipt_url, paymentId: rawObj.payment_id, confirmed: !!rawObj.confirmed, rawObj: rawObj };
+                        const detailStr = this.generateDetailString(key, rawObj);
+                        if(detailStr !== "0" && detailStr !== "-") { this.entry[key] = rawObj; const amount = this.calculateCategoryTotal(key); details.push(`${this.categories[key].label}: ${detailStr} = ¥${amount.toLocaleString()}`); }
+                    }
+                    result.cost_detail = details.length > 0 ? details.join('\n') : "内訳なし";
+                    return result;
+                },
+                getAdminStatusClass(cat) { if (cat.confirmed) return 'status-done'; if (cat.hasReceipt) return 'status-pending'; if (cat.hasPaymentId) return 'status-waiting'; return 'status-none'; },
+                showReceipt(record, catKey) { this.modal.univName = record.univ_name; this.modal.category = catKey; this.modal.url = record[catKey].receiptUrl; this.modal.targetRecord = record; this.modal.show = true; },
+                closeModal() { this.modal.show = false; },
+                getCategoryName(key) { return this.categories[key] ? this.categories[key].label : key; },
+                downloadAllCSV() {
+                    let csv = "ID,クラブ名,合計請求額"; for (const key in this.categories) csv += `,${this.categories[key].label}_詳細,${this.categories[key].label}_Excel`; csv += "\n";
+                    this.filteredAdminRecords.forEach(r => { let line = `${r.univ_id},${r.univ_name},${r.total_cost}`; for (const key in this.categories) { const raw = r[key].rawObj || {}; const detail = this.generateDetailString(key, raw).replace(/,/g, ' '); line += `,${detail},${raw.excel_url || ''}`; } csv += line + "\n"; });
+                    saveAs(new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: "text/csv" }), "kanagawa_badminton_summary.csv");
+                },
+                downloadTournamentCSV() {
+                    const key = this.selectedTournament; let csv = `ID,クラブ名,参加内訳,ExcelURL,支払ID,承認済\n`;
+                    this.filteredAdminRecords.forEach(r => { const raw = r[key].rawObj; if (!raw) return; const detail = this.generateDetailString(key, raw).replace(/,/g, ' '); csv += `${r.univ_id},${r.univ_name},${detail},${raw.excel_url||''},${raw.payment_id||''},${raw.confirmed?1:0}\n`; });
+                    saveAs(new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: "text/csv" }), `kanagawa_${key}_list.csv`);
+                },
+                async downloadTournamentZip() {
+                    const key = this.selectedTournament; const zip = new JSZip(); let count = 0; this.isZipping = true;
+                    const targets = this.filteredAdminRecords.filter(r => r[key].rawObj && r[key].rawObj.excel_url).map(r => ({ name: `${r.univ_name}_${this.getCategoryName(key)}.xlsx`, url: r[key].rawObj.excel_url }));
+                    if (targets.length === 0) { alert("対象のExcelファイルがありません。"); this.isZipping = false; return; }
+                    try { await Promise.all(targets.map(async (target) => { try { const response = await fetch(target.url); if (!response.ok) throw new Error("Network error"); const blob = await response.blob(); zip.file(target.name, blob); count++; } catch (err) { console.error(`Failed to load ${target.name}`, err); } })); if (count === 0) alert("ファイルのダウンロードに失敗しました。"); else saveAs(await zip.generateAsync({ type: "blob" }), `${this.getCategoryName(key)}_All_Excel.zip`); } catch (e) { console.error(e); alert("ZIP作成中にエラーが発生しました。"); } finally { this.isZipping = false; }
+                },
+                toggleApproval(isApprove) {
+                    const rec = this.modal.targetRecord; const cat = this.modal.category; if (!confirm(isApprove ? "「振込済み」として承認しますか？" : "承認を取り消しますか？")) return;
+                    rec[cat].confirmed = isApprove; rec[cat].rawObj.confirmed = isApprove;
+                    this.saveTargetRecord(rec).then(() => { alert(isApprove ? "承認しました" : "承認を取り消しました"); this.modal.show = false; });
+                },
+                togglePaymentStatus(rec, key) {
+                    const currentStatus = rec[key].confirmed; if (!confirm(currentStatus ? "「承認済」を取り消して「未承認」に戻しますか？" : "入金を確認しましたか？\n「承認済」ステータスに変更します。")) return;
+                    rec[key].confirmed = !currentStatus; rec[key].rawObj.confirmed = !currentStatus;
+                    this.saveTargetRecord(rec);
+                },
+                saveTargetRecord(rec) {
+                    const payload = { ...rec.raw_data }; const cats = this.adminStatusKeys; cats.forEach(key => { payload[key] = JSON.stringify(rec[key].rawObj); }); payload.email = payload.email || 'admin_edit'; 
+                    return fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json()).catch(e => { console.error(e); alert("保存エラーが発生しました"); });
+                },
+                openReceipt(category) {
+                    const amount = this.calculateCategoryTotal(category); if (amount === 0) { alert("支払金額が0円のため発行できません。"); return; }
+                    this.receiptData.amount = amount; this.receiptData.title = `令和7年度 ${this.categories[category].label} 参加費等`; this.receiptData.show = true;
+                },
+                addNews() { if(!this.adminNews.date || !this.adminNews.title) return alert("日付とタイトルは必須です"); this.newsList.unshift({ ...this.adminNews }); this.saveNews(); this.adminNews = { date: '', title: '', content: '', url: '' }; },
+                deleteNews(index) { if(!confirm("削除しますか？")) return; this.newsList.splice(index, 1); this.saveNews(); },
+                saveNews() { const payload = { action: 'update_news', news_list: this.newsList }; fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json()).then(() => alert("連絡事項を更新しました")).catch(e => alert("エラー: " + e.message)); },
+                sendAlertEmail(rec) {
+                    const reason = prompt(`${rec.univ_name} (${rec.raw_data.email}) へメールを送信します。\n\n不備の内容を入力してください：`); if (!reason) return;
+                    const body = `${rec.univ_name} 代表者様\n\n神奈川県小学生バドミントン連盟です。\nご提出いただいた登録内容に以下の不備がありました。\n\n【不備内容】\n${reason}\n\nシステムにログインし、修正・再申請をお願いいたします。\nhttps://kanto-badminton-app.web.app/`; 
+                    if (!confirm("以下の内容で送信しますか？\n\n" + body)) return;
+                    const payload = { action: 'send_email', to: rec.raw_data.email, body: body };
+                    fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json()).then(d => { if(d.status === 'success') alert("送信しました"); else alert("送信失敗: " + d.message); }).catch(e => alert("通信エラー"));
+                },
+                openDetailModal(rec, key) {
+                    const raw = rec[key].rawObj; const catName = this.getCategoryName(key); const detailText = this.generateDetailString(key, raw).replace(/, /g, '\n');
+                    this.detailModal = { show: true, title: `${rec.univ_name} - ${catName}`, type: 'entry', data: { text: detailText } };
+                }
+            }
+
+
+
+
+        }).mount('#app');
+    </script>
+</body>
+</html>
