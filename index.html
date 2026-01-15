@@ -411,137 +411,171 @@
                                     </div>
                                 </div>
                                 
-                                <template v-for="(catName, catKey) in categories" :key="catKey">
-                                    <div v-if="activeTab === catKey">
-                                        <div class="d-flex justify-content-between align-items-center mb-3"><h4 class="text-primary"><i class="bi bi-folder2-open"></i> {{ catName.label }}</h4></div>
-                                        <div class="alert alert-info small"><i class="bi bi-exclamation-circle-fill"></i> 申込用紙(Excel)をアップロードし、内訳を入力してください。</div>
-                                        <div class="excel-upload-area">
-                                            <label class="form-label fw-bold">申込ファイル(Excel)のアップロード</label>
-                                            <input type="file" class="form-control w-75 mx-auto" accept=".xlsx, .xls" @change="uploadExcel($event, catKey)">
-                                            <div v-if="entry[catKey].excel_url" class="mt-3"><span class="badge bg-success"><i class="bi bi-file-earmark-excel"></i> アップロード済み</span><a :href="entry[catKey].excel_url" target="_blank" class="d-block mt-1 small">確認する</a></div>
-                                            <div v-if="isUploading" class="spinner-border spinner-border-sm mt-2 text-primary"></div>
-                                        </div>
+                                
 
-                                        <div class="count-input-group mb-4">
-                                            <h6 class="border-bottom pb-2 mb-3">参加・登録数 入力</h6>
-                                            <div class="row g-3">
-                                                <div v-if="catKey === 'reg_fee'" class="row g-3"><div class="col-md-6"><label>選手登録 (¥1,500)</label><div class="input-group"><input type="number" v-model.number="entry.reg_fee.count_player" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-6"><label>指導者登録 (¥1,500)</label><div class="input-group"><input type="number" v-model.number="entry.reg_fee.count_coach" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
-                                                <div v-if="catKey === 'training'" class="row g-3"><div class="col-md-4"><label>一般 (¥5,000)</label><div class="input-group"><input type="number" v-model.number="entry.training.count_general" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>指導者会員 (¥3,000)</label><div class="input-group"><input type="number" v-model.number="entry.training.count_member" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>小中高生 (¥500)</label><div class="input-group"><input type="number" v-model.number="entry.training.count_student" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
-                                                <div v-if="catKey === 'class_tourney'" class="row g-3"><div class="col-md-4"><label>ビギナーズ (¥2,000/人)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_beginner" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>チャレンジ (¥2,000/人)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_challenge" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>ミックス複 (¥4,000/組)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_mix" class="form-control" min="0"><span class="input-group-text">組</span></div></div></div>
-                                                <div v-if="catKey === 'wakaba'" class="row g-3"><div class="col-md-6"><label>参加チーム (¥15,000)</label><div class="input-group"><input type="number" v-model.number="entry.wakaba.count_team" class="form-control" min="0"><span class="input-group-text">チーム</span></div></div></div>
-                                                <div v-if="catKey === 'abc'" class="row g-3"><div class="col-md-6"><label>シングルス (¥2,000)</label><div class="input-group"><input type="number" v-model.number="entry.abc.count_single" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
-                                                <div v-if="catKey === 'umpire'" class="row g-3"><div class="col-md-6"><label>受講者数 (¥1,000)</label><div class="input-group"><input type="number" v-model.number="entry.umpire.count_person" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
-                                                <div v-if="catKey === 'chairman'" class="row g-3"><div class="col-md-6"><label>ダブルス (¥4,000)</label><div class="input-group"><input type="number" v-model.number="entry.chairman.count_double" class="form-control" min="0"><span class="input-group-text">組</span></div></div></div>
-                                                <div v-if="catKey === 'kanto'" class="row g-3"><div class="col-md-6"><label>シングルス (¥2,500)</label><div class="input-group"><input type="number" v-model.number="entry.kanto.count_single" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-6"><label>ダブルス (¥5,000)</label><div class="input-group"><input type="number" v-model.number="entry.kanto.count_double" class="form-control" min="0"><span class="input-group-text">組</span></div></div></div>
-                                                <div v-if="catKey === 'rookie'" class="row g-3"><div class="col-md-6"><label>シングルス (¥2,000)</label><div class="input-group"><input type="number" v-model.number="entry.rookie.count_single" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
-                                                <div v-if="catKey === 'fed_doubles'" class="row g-3"><div class="col-md-6"><label>ダブルス (¥4,000)</label><div class="input-group"><input type="number" v-model.number="entry.fed_doubles.count_double" class="form-control" min="0"><span class="input-group-text">組</span></div></div></div>
-                                                <div v-if="catKey === 'add_reg'" class="row g-3">
-    
-    <div class="col-12 mb-4" v-if="entry.add_reg.history && entry.add_reg.history.length > 0">
-        <div class="card bg-light border-primary">
-            <div class="card-header bg-primary text-white small py-1">
-                <i class="bi bi-list-check"></i> 追加登録済みリスト ({{ entry.add_reg.history.length }}件)
-            </div>
-            <ul class="list-group list-group-flush">
-                <li v-for="(item, idx) in entry.add_reg.history" :key="idx" class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                        <span class="badge bg-secondary me-2">No.{{ idx + 1 }}</span>
-                        <span class="fw-bold me-2 text-primary">{{ item.period === 'early' ? '関東前' : '1月' }}</span>
-                        <span class="small">選手: <strong>{{ item.count_player }}</strong>名 / 指導者: <strong>{{ item.count_coach }}</strong>名</span>
-                        <a v-if="item.excel_url" :href="item.excel_url" target="_blank" class="ms-3 btn btn-sm btn-outline-success py-0" style="font-size: 0.75rem;">
-                            <i class="bi bi-file-earmark-excel"></i> Excel確認
-                        </a>
-                    </div>
-                    <button class="btn btn-sm btn-outline-danger" @click="removeRegHistory(idx)">
+
+<template v-for="(catName, catKey) in categories" :key="catKey">
+    <div v-if="activeTab === catKey">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="text-primary"><i class="bi bi-folder2-open"></i> {{ catName.label }}</h4>
+        </div>
+
+        <div class="alert alert-info small"><i class="bi bi-exclamation-circle-fill"></i> 申込用紙(Excel)をアップロードし、内訳を入力してください。</div>
+        
+        <div class="excel-upload-area">
+            <label class="form-label fw-bold">申込ファイル(Excel)のアップロード</label>
+            <div v-if="entry[catKey].excel_url" class="mt-3">
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <span class="badge bg-success"><i class="bi bi-file-earmark-excel"></i> アップロード済み</span>
+                    <button class="btn btn-sm btn-outline-danger" @click="deleteExcel(catKey)">
                         <i class="bi bi-trash"></i> 削除
                     </button>
-                </li>
-            </ul>
-        </div>
-    </div>
-
-    <div class="col-12">
-        <div class="p-3 border rounded bg-white shadow-sm position-relative">
-            <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-danger border border-light shadow-sm" style="left: 20px !important;">NEW</span>
-            <h6 class="mb-3 text-dark fw-bold border-bottom pb-2">
-                <i class="bi bi-plus-circle-fill text-success"></i> 新しく追加登録を行う
-            </h6>
-            
-            <div class="alert alert-light border small text-muted">
-                <i class="bi bi-info-circle"></i> 上のエリアでExcelをアップロードしてから、下の人数を入力し「リストに追加」を押してください。
+                </div>
+                <a :href="entry[catKey].excel_url" target="_blank" class="d-block mt-1 small">確認する</a>
             </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold bg-light p-2 rounded w-100">登録時期を選択</label>
-                <div class="d-flex gap-4 ms-2">
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" v-model="entry.add_reg.period" value="early" id="ar1">
-                        <label class="form-check-label" for="ar1">関東予選前まで (¥1,500)</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" v-model="entry.add_reg.period" value="late" id="ar2">
-                        <label class="form-check-label" for="ar2">1月 新人戦 (¥500)</label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row g-3 mb-3">
-                <div class="col-md-6">
-                    <label>選手登録</label>
-                    <div class="input-group">
-                        <input type="number" v-model.number="entry.add_reg.count_player" class="form-control" min="0">
-                        <span class="input-group-text">名</span>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <label>指導者登録</label>
-                    <div class="input-group">
-                        <input type="number" v-model.number="entry.add_reg.count_coach" class="form-control" min="0">
-                        <span class="input-group-text">名</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mb-2 text-center">
-                <button class="btn btn-success w-75 fw-bold shadow-sm" @click="addRegToHistory" :disabled="!entry.add_reg.excel_url">
-                    <i class="bi bi-arrow-up-circle"></i> 入力内容をリストに追加する
-                </button>
-                <div v-if="!entry.add_reg.excel_url" class="text-danger small mt-2 fw-bold">
-                    <i class="bi bi-exclamation-triangle"></i> 先にExcelファイルをアップロードしてください
-                </div>
+            <div v-else>
+                <input type="file" class="form-control w-75 mx-auto" accept=".xlsx, .xls" @change="uploadExcel($event, catKey)">
+                <div v-if="isUploading" class="spinner-border spinner-border-sm mt-2 text-primary"></div>
             </div>
         </div>
-    </div>
-</div>
-                                            </div>
-                                    
-                                    <div class="payment-box">
-                                        <div class="text-center">
-                                            <h5 class="text-dark mb-1">合計支払額: <strong>{{ formatMoney(calculateCategoryTotal(catKey)) }}</strong></h5>
-                                            <p class="mb-2 text-muted small">下記番号を振込名義の前に入力してください</p>
-                                            <div class="payment-id">{{ entry[catKey].payment_id }}</div>
-                                            <div class="mt-2 text-danger fw-bold">振込名義: {{ entry[catKey].payment_id }} {{ form.univ_name }}</div>
+
+        <div class="count-input-group mb-4">
+            <h6 class="border-bottom pb-2 mb-3">参加・登録数 入力</h6>
+            <div class="row g-3">
+                <div v-if="catKey === 'reg_fee'" class="row g-3"><div class="col-md-6"><label>選手登録 (¥1,500)</label><div class="input-group"><input type="number" v-model.number="entry.reg_fee.count_player" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-6"><label>指導者登録 (¥1,500)</label><div class="input-group"><input type="number" v-model.number="entry.reg_fee.count_coach" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
+                <div v-if="catKey === 'training'" class="row g-3"><div class="col-md-4"><label>一般 (¥5,000)</label><div class="input-group"><input type="number" v-model.number="entry.training.count_general" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>指導者会員 (¥3,000)</label><div class="input-group"><input type="number" v-model.number="entry.training.count_member" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>小中高生 (¥500)</label><div class="input-group"><input type="number" v-model.number="entry.training.count_student" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
+                <div v-if="catKey === 'class_tourney'" class="row g-3"><div class="col-md-4"><label>ビギナーズ (¥2,000/人)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_beginner" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>チャレンジ (¥2,000/人)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_challenge" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>ミックス複 (¥4,000/組)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_mix" class="form-control" min="0"><span class="input-group-text">組</span></div></div></div>
+                <div v-if="catKey === 'wakaba'" class="row g-3"><div class="col-md-6"><label>参加チーム (¥15,000)</label><div class="input-group"><input type="number" v-model.number="entry.wakaba.count_team" class="form-control" min="0"><span class="input-group-text">チーム</span></div></div></div>
+                <div v-if="catKey === 'abc'" class="row g-3"><div class="col-md-6"><label>シングルス (¥2,000)</label><div class="input-group"><input type="number" v-model.number="entry.abc.count_single" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
+                <div v-if="catKey === 'umpire'" class="row g-3"><div class="col-md-6"><label>受講者数 (¥1,000)</label><div class="input-group"><input type="number" v-model.number="entry.umpire.count_person" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
+                <div v-if="catKey === 'chairman'" class="row g-3"><div class="col-md-6"><label>ダブルス (¥4,000)</label><div class="input-group"><input type="number" v-model.number="entry.chairman.count_double" class="form-control" min="0"><span class="input-group-text">組</span></div></div></div>
+                <div v-if="catKey === 'kanto'" class="row g-3"><div class="col-md-6"><label>シングルス (¥2,500)</label><div class="input-group"><input type="number" v-model.number="entry.kanto.count_single" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-6"><label>ダブルス (¥5,000)</label><div class="input-group"><input type="number" v-model.number="entry.kanto.count_double" class="form-control" min="0"><span class="input-group-text">組</span></div></div></div>
+                <div v-if="catKey === 'rookie'" class="row g-3"><div class="col-md-6"><label>シングルス (¥2,000)</label><div class="input-group"><input type="number" v-model.number="entry.rookie.count_single" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
+                <div v-if="catKey === 'fed_doubles'" class="row g-3"><div class="col-md-6"><label>ダブルス (¥4,000)</label><div class="input-group"><input type="number" v-model.number="entry.fed_doubles.count_double" class="form-control" min="0"><span class="input-group-text">組</span></div></div></div>
+
+                <div v-if="catKey === 'add_reg'" class="row g-3">
+                    <div class="col-12 mb-4" v-if="entry.add_reg.history && entry.add_reg.history.length > 0">
+                        <div class="card bg-light border-primary">
+                            <div class="card-header bg-primary text-white small py-1">
+                                <i class="bi bi-list-check"></i> 追加登録済みリスト ({{ entry.add_reg.history.length }}件)
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li v-for="(item, idx) in entry.add_reg.history" :key="idx" class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="badge bg-secondary me-2">No.{{ idx + 1 }}</span>
+                                        <span class="fw-bold me-2 text-primary">{{ item.period === 'early' ? '関東前' : '1月' }}</span>
+                                        <span class="small">選手: <strong>{{ item.count_player }}</strong>名 / 指導者: <strong>{{ item.count_coach }}</strong>名</span>
+                                        
+                                        <div class="mt-1">
+                                            <a v-if="item.excel_url" :href="item.excel_url" target="_blank" class="btn btn-sm btn-outline-success py-0 me-2" style="font-size: 0.75rem;"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+                                            <a v-if="item.receipt_url" :href="item.receipt_url" target="_blank" class="btn btn-sm btn-outline-warning py-0 text-dark me-2" style="font-size: 0.75rem;"><i class="bi bi-card-image"></i> 振込明細</a>
                                             
-                                            <div class="receipt-area">
-                                                <h6 class="small fw-bold mb-3">振込明細の写真</h6>
-                                                <div v-if="entry[catKey].receipt_url">
-                                                    <span class="badge badge-uploaded mb-2"><i class="bi bi-check-circle-fill"></i> 登録済み</span>
-                                                    <div class="mb-3"><img :src="entry[catKey].receipt_url" class="receipt-preview"></div>
-                                                    <button class="btn btn-sm btn-outline-danger" @click="deleteReceipt(catKey)"><i class="bi bi-trash"></i> 画像を削除して再アップロード</button>
-                                                    <div class="mt-3 border-top pt-2"><button class="btn btn-outline-dark w-100" @click="openReceipt(catKey)"><i class="bi bi-receipt"></i> 領収書を発行</button></div>
-                                                </div>
-                                                <div v-else>
-                                                    <span class="badge badge-missing mb-2">未登録</span>
-                                                    <div class="mt-2"><input type="file" class="form-control form-control-sm w-75 mx-auto" accept="image/*" @change="uploadReceipt($event, catKey)"><div v-if="isUploading" class="spinner-border spinner-border-sm mt-2"></div></div>
-                                                </div>
-                                            </div>
+                                            <button class="btn btn-sm btn-outline-dark py-0" style="font-size: 0.75rem;" @click="openHistoryReceipt(item)">
+                                                <i class="bi bi-receipt"></i> 領収書
+                                            </button>
                                         </div>
                                     </div>
-                                    
-                                </template>
-                                <div v-if="categories[activeTab]" class="save-area">
-                                    <button @click="saveData" class="btn btn-primary btn-lg px-5" :disabled="isSaving"><i class="bi bi-save"></i> データ保存</button>
+                                    <button class="btn btn-sm btn-outline-danger" @click="removeRegHistory(idx)"><i class="bi bi-trash"></i> 削除</button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="p-3 border rounded bg-white shadow-sm position-relative">
+                            <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-danger border border-light shadow-sm" style="left: 20px !important;">NEW</span>
+                            <h6 class="mb-3 text-dark fw-bold border-bottom pb-2"><i class="bi bi-plus-circle-fill text-success"></i> 新しく追加登録を行う</h6>
+                            <div class="alert alert-light border small text-muted"><i class="bi bi-info-circle"></i> Excelをアップロードし、人数を入力後、振込明細を添付して「リストに追加」を押してください。</div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold bg-light p-2 rounded w-100">登録時期を選択</label>
+                                <div class="d-flex gap-4 ms-2">
+                                    <div class="form-check"><input class="form-check-input" type="radio" v-model="entry.add_reg.period" value="early" id="ar1"><label class="form-check-label" for="ar1">関東予選前まで (¥1,500)</label></div>
+                                    <div class="form-check"><input class="form-check-input" type="radio" v-model="entry.add_reg.period" value="late" id="ar2"><label class="form-check-label" for="ar2">1月 新人戦 (¥500)</label></div>
                                 </div>
+                            </div>
+                            
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6"><label>選手登録</label><div class="input-group"><input type="number" v-model.number="entry.add_reg.count_player" class="form-control" min="0"><span class="input-group-text">名</span></div></div>
+                                <div class="col-md-6"><label>指導者登録</label><div class="input-group"><input type="number" v-model.number="entry.add_reg.count_coach" class="form-control" min="0"><span class="input-group-text">名</span></div></div>
+                            </div>
+
+                            <div class="excel-upload-area mt-3 mb-3" style="background-color: #fff3cd; border-color: #ffc107;">
+                                <label class="form-label fw-bold">振込明細(画像)のアップロード</label>
+                                <div v-if="entry.add_reg.receipt_url">
+                                    <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                                        <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> 画像セット完了</span>
+                                        <button class="btn btn-sm btn-outline-danger" @click="deleteReceipt('add_reg')"><i class="bi bi-trash"></i> 削除</button>
+                                    </div>
+                                    <img :src="entry.add_reg.receipt_url" class="receipt-preview" style="max-height: 150px;">
+                                </div>
+                                <div v-else>
+                                    <input type="file" class="form-control w-75 mx-auto" accept="image/*" @change="uploadReceipt($event, 'add_reg')">
+                                    <div v-if="isUploading" class="spinner-border spinner-border-sm mt-2"></div>
+                                    <div class="small text-muted mt-1">※Excelと一緒にリストに追加されます</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-2 text-center">
+                                <button class="btn btn-success w-75 fw-bold shadow-sm" @click="addRegToHistory" :disabled="!entry.add_reg.excel_url">
+                                    <i class="bi bi-arrow-up-circle"></i> 入力内容をリストに追加する
+                                </button>
+                                <div v-if="!entry.add_reg.excel_url" class="text-danger small mt-2 fw-bold"><i class="bi bi-exclamation-triangle"></i> Excelのアップロードが必要です</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="payment-box">
+            <div class="text-center">
+                <h5 class="text-dark mb-1">合計支払額: <strong>{{ formatMoney(calculateCategoryTotal(catKey)) }}</strong></h5>
+
+                <div class="bg-white rounded border border-warning p-2 my-3 d-inline-block px-4 shadow-sm">
+                    <div class="small text-muted border-bottom mb-1 pb-1">振込先</div>
+                    <div class="fw-bold text-dark fs-5">
+                        ゆうちょ銀行　店番：098<br>
+                        普通貯金　番号：0334265
+                    </div>
+                </div>
+                
+                <p class="mb-2 text-muted small">下記番号を振込名義の前に入力してください</p>
+                <div class="payment-id">{{ entry[catKey].payment_id }}</div>
+                <div class="mt-2 text-danger fw-bold">振込名義: {{ entry[catKey].payment_id }} {{ form.univ_name }}</div>
+                
+                <div class="receipt-area" v-if="catKey !== 'add_reg'">
+                    <h6 class="small fw-bold mb-3">振込明細の写真</h6>
+                    <div v-if="entry[catKey].receipt_url">
+                        <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                            <span class="badge badge-uploaded"><i class="bi bi-check-circle-fill"></i> 登録済み</span>
+                            <button class="btn btn-sm btn-outline-danger" @click="deleteReceipt(catKey)">
+                                <i class="bi bi-trash"></i> 削除
+                            </button>
+                        </div>
+                        <div class="mb-3"><img :src="entry[catKey].receipt_url" class="receipt-preview"></div>
+                        <div class="mt-3 border-top pt-2"><button class="btn btn-outline-dark w-100" @click="openReceipt(catKey)"><i class="bi bi-receipt"></i> 領収書を発行</button></div>
+                    </div>
+                    <div v-else>
+                        <span class="badge badge-missing mb-2">未登録</span>
+                        <div class="mt-2"><input type="file" class="form-control form-control-sm w-75 mx-auto" accept="image/*" @change="uploadReceipt($event, catKey)"><div v-if="isUploading" class="spinner-border spinner-border-sm mt-2"></div></div>
+                    </div>
+                </div>
+                <div class="receipt-area" v-else>
+                    <div class="alert alert-info small border-0 mb-0">
+                        <i class="bi bi-info-circle-fill"></i> 追加登録の振込明細は、上の「追加登録フォーム」内でExcelと一緒にアップロードし、リストに追加してください。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+                                <div v-if="categories[activeTab]" class="save-area">
+    <button @click="saveData(false)" class="btn btn-primary btn-lg px-5" :disabled="isSaving">
+        <i class="bi bi-save"></i> データ保存
+    </button>
+</div>
                         </div>
 
                         <div v-if="activeTab === 'settlement'">
@@ -918,6 +952,7 @@
                     });
             });
         },
+
         startUserUnreadListener(univId) {
             const strUnivId = String(univId);
             db.collection('chats').doc(strUnivId).collection('messages')
@@ -940,6 +975,7 @@
                     }
                 });
         },
+
         sendChat(sender) {
             if (!this.chatInput.trim()) return;
             const univId = this.isAdmin ? this.adminChatModal.univId : this.form.univ_id;
@@ -960,35 +996,49 @@
                 this.scrollToBottom(this.isAdmin ? 'adminChatBox' : 'userChatBox');
             }).catch(e => console.error(e));
         },
+
         openAdminChat(rec) {
             this.adminChatModal.univId = rec.univ_id;
             this.adminChatModal.univName = rec.univ_name;
             this.adminChatModal.show = true;
             this.initChat(rec.univ_id);
         },
+
         formatTimestamp(ts) {
             if (!ts) return '';
             const d = ts.toDate();
             return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
         },
+
         scrollToBottom(elemId) {
             const el = document.getElementById(elemId);
             if(el) el.scrollTop = el.scrollHeight;
         },
+
         uploadExcel(event, category) {
             const file = event.target.files[0]; if (!file) return; this.isUploading = true;
             const path = `excel/${this.form.univ_id}/${category}_${Date.now()}_${file.name}`;
             firebase.storage().ref().child(path).put(file).then(s => s.ref.getDownloadURL()).then(url => { this.entry[category].excel_url = url; this.saveData(true); this.isUploading = false; alert("ファイルをアップロードしました"); }).catch(e => { alert("アップロード失敗: " + e.message); this.isUploading = false; });
         },
+
+deleteExcel(category) {
+    if (!confirm("アップロードしたExcelファイルを削除しますか？\n（入力した人数は残ります）")) return;
+    this.entry[category].excel_url = '';
+    this.saveData(true); // サイレント保存
+},
+
         uploadReceipt(event, category) {
             const file = event.target.files[0]; if (!file) return; this.isUploading = true;
             const path = `receipts/${this.form.univ_id}/${category}_${Date.now()}`;
             firebase.storage().ref().child(path).put(file).then(s => s.ref.getDownloadURL()).then(url => { this.entry[category].receipt_url = url; this.saveData(true); this.isUploading = false; }).catch(e => { alert("アップロード失敗: " + e.message); this.isUploading = false; });
         },
+
         deleteReceipt(category) {
-            if(!confirm("画像を削除しますか？")) return;
-            this.entry[category].receipt_url = ''; this.saveData(true);
-        },
+    if(!confirm("画像を削除しますか？")) return;
+    this.entry[category].receipt_url = ''; 
+    this.saveData(true); // サイレント保存
+},
+
         uploadNewsFile(event) {
             const file = event.target.files[0]; if (!file) return; this.isUploadingNews = true;
             const path = `news/${Date.now()}_${file.name}`;
@@ -1000,6 +1050,29 @@
             if (this.account.newPass) promises.push(user.updatePassword(this.account.newPass));
             Promise.all(promises).then(() => { alert("アカウント情報を更新しました"); if (this.account.newEmail) this.saveData(true); this.account.newEmail = ''; this.account.newPass = ''; }).catch(err => { alert("エラー: " + err.message); });
         },
+
+openHistoryReceipt(item) {
+    // 1. その履歴データの金額を計算
+    // item.period が 'late' なら500円、'early' なら1500円
+    const price = (item.period === 'late') ? 500 : 1500;
+    const count = (item.count_player || 0) + (item.count_coach || 0);
+    const total = count * price;
+
+    if (total === 0) {
+        alert("金額が0円のため発行できません。");
+        return;
+    }
+
+    // 2. 領収書データをセット
+    this.receiptData.amount = total;
+    // タイトルを少し変えて区別しやすくする（例：追加登録(関東予選前) 参加費等）
+    const periodLabel = (item.period === 'late') ? "1月新人戦" : "関東予選前";
+    this.receiptData.title = `令和7年度 追加登録(${periodLabel}) 参加費等`;
+    
+    // 3. モーダルを表示
+    this.receiptData.show = true;
+},
+
         deleteAccount() {
             if (!confirm("本当にアカウントを削除しますか？\n\nこの操作は取り消せません。\n再登録が必要になります。")) return;
             const user = firebase.auth().currentUser; const email = user.email;
@@ -1122,33 +1195,34 @@
         },
 
         addRegToHistory() {
-            const target = this.entry.add_reg;
-            
-            // 入力チェック
-            if (!target.excel_url) return alert("Excelファイルがアップロードされていません");
-            if (target.count_player === 0 && target.count_coach === 0) return alert("人数が入力されていません");
+    const target = this.entry.add_reg;
+    
+    // 入力チェック
+    if (!target.excel_url) return alert("Excelファイルがアップロードされていません");
+    if (target.count_player === 0 && target.count_coach === 0) return alert("人数が入力されていません");
 
-            // 履歴配列がなければ作成
-            if (!target.history) target.history = [];
+    // 履歴配列がなければ作成
+    if (!target.history) target.history = [];
 
-            // 現在の内容を履歴にプッシュ
-            target.history.push({
-                excel_url: target.excel_url,
-                period: target.period,
-                count_player: target.count_player,
-                count_coach: target.count_coach,
-                added_at: new Date().toISOString()
-            });
+    // 現在の内容を履歴にプッシュ
+    target.history.push({
+        excel_url: target.excel_url,
+        receipt_url: target.receipt_url || '', // 画像URLも保存
+        period: target.period,
+        count_player: target.count_player,
+        count_coach: target.count_coach,
+        added_at: new Date().toISOString()
+    });
 
-            // 入力欄をクリア
-            target.excel_url = '';
-            target.count_player = 0;
-            target.count_coach = 0;
-            
-            // 保存
-            // ★変更点: リスト追加時に「保存しました」を出すため false に変更
-            this.saveData(false);
-        },
+    // 入力欄をクリア
+    target.excel_url = '';
+    target.receipt_url = ''; // 画像入力もクリア
+    target.count_player = 0;
+    target.count_coach = 0;
+    
+    // 保存（リストに追加したタイミングで「保存しました」と出したい場合は false、出したくないなら true）
+    this.saveData(false); 
+},
 
         // ★新規追加: 履歴から削除するメソッド
         removeRegHistory(index) {
