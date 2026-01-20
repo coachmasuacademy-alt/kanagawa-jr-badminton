@@ -62,7 +62,16 @@
         .status-pending { background-color: #fd7e14; color: white; border-color: #e87311; } 
         .receipt-modal-img { max-width: 100%; max-height: 80vh; object-fit: contain; }
         .btn-approve { font-weight: bold; padding: 10px 30px; font-size: 1.1rem; }
-        .table-admin th { background-color: #343a40; color: white; position: sticky; top: 0; z-index: 10; font-size: 0.85rem; white-space: nowrap; }
+        .table-admin th { 
+    background-color: #eee !important; /* 明るいグレーに変更 */
+    color: #333 !important;            /* 文字を濃いグレーに変更 */
+    position: sticky; 
+    top: 0; 
+    z-index: 10; 
+    font-size: 0.85rem; 
+    white-space: nowrap; 
+    border-bottom: 2px solid #ccc;
+}
         .table-admin td { vertical-align: middle; font-size: 0.9rem; }
         .univ-name-cell { min-width: 150px; font-weight: bold; }
         .money-cell { font-family: monospace; text-align: right; white-space: nowrap; }
@@ -552,7 +561,7 @@
                     <table class="table table-hover table-admin mb-0">
                         <thead><tr>
                             <th>ID</th><th>クラブ名</th><th>代表者</th><th>連絡</th><th>請求合計</th>
-                            <th>①登録</th><th>②講習会</th><th>③クラス</th><th>④若葉</th><th>⑤ABC</th>
+                            <th>①登録</th><th>②講習会</th><th>③ミックス＆ビギナー</th><th>④若葉</th><th>⑤ABC</th>
                             <th>⑥審判</th><th>⑦会長杯</th><th>⑧関東</th><th>⑨新人</th><th>⑩連盟複</th><th>⑪追加</th>
                             <th>備考・連絡</th>
                         </tr></thead>
@@ -1469,7 +1478,7 @@
             categories: {
                 reg_fee: { label: "① 連盟登録", id_suffix: "01" },
                 training: { label: "② 指導者・ジュニア講習会", id_suffix: "02" },
-                class_tourney: { label: "③ クラス別大会", id_suffix: "03" },
+                class_tourney: { label: "③ ミックスダブルス＆ビギナーズ大会", id_suffix: "03" },
                 wakaba: { label: "④ 若葉カップ神奈川県予選", id_suffix: "04" },
                 abc: { label: "⑤ ABC大会神奈川県予選", id_suffix: "05" },
                 umpire: { label: "⑥ 審判講習会", id_suffix: "06" },
