@@ -175,7 +175,7 @@
     padding: 8px 40px;
     border-radius: 50px;
     font-weight: bold;
-    font-size: 32px; /* タイトルも少し大きく */
+    font-size: 38px; /* タイトルも少し大きく */
     border: 2px solid rgba(255,255,255,0.6);
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
@@ -187,21 +187,18 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 20px 0;
+    padding: 10px 0 !important;
 }
 
 .team-name {
-    font-size: 42px;
-    font-weight: bold;
-    margin-bottom: 20px;
-    color: #e3f2fd;
-    opacity: 0.9;
+    font-size: 52px !important; /* 42pxからアップ */
+    margin-bottom: 10px;
 }
 
 .coach-name {
-    font-size: 88px; /* 名前を特大に */
+    font-size: 94px; /* 名前を特大に */
     font-weight: bold;
-    margin-bottom: 30px;
+    margin-bottom: 20px !important;
     line-height: 1.1;
     text-shadow: 3px 3px 6px rgba(0,0,0,0.4);
     border-bottom: 2px solid rgba(255,255,255,0.3);
@@ -222,16 +219,11 @@
     gap: 15px;
 }
 .meta-item label {
-    font-size: 20px;
-    opacity: 0.7;
-    font-weight: normal;
+    font-size: 28px !important; /* 20pxからアップ */
 }
 .meta-item div {
-    font-weight: bold;
-    font-family: monospace;
-    font-size: 36px; /* ID番号も見やすく */
+    font-size: 48px !important; /* 36pxからアップ */
 }
-
 /* フッターエリア（資格・期限） */
 .card-footer-area {
     display: flex;
@@ -253,11 +245,9 @@
 }
 
 .badge-license {
-    padding: 12px 30px;
-    border-radius: 12px;
-    font-weight: bold;
-    font-size: 26px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    padding: 15px 35px !important;
+    font-size: 32px !important; /* 26pxからアップ */
+    border-width: 3px !important; /* 枠線を太く */
 }
 .badge-coach { 
     background: #fff;       /* 背景は白 */
@@ -276,56 +266,86 @@
     padding-top: 10px;
     width: 100%;
 }
-.valid-label { font-size: 16px; opacity: 0.8; letter-spacing: 2px; }
-.valid-value { font-size: 34px; font-weight: bold; font-family: monospace; }
-
+.valid-label {
+    font-size: 24px !important; /* 16pxからアップ */
+    letter-spacing: 4px !important;
+}
+.valid-value {
+    font-size: 46px !important; /* 34pxからアップ */
+}
 .print-only-area {
     display: none;
 }
 
 @media print {
-    /* 1. 画面のUIを全て非表示にする */
+    /* 1. 用紙サイズをA4縦に固定 */
+    @page {
+        size: A4 portrait;
+        margin: 10mm; /* プリンターの印刷限界を考慮した外余白 */
+    }
+
+    /* 2. 画面上の全要素を非表示に */
     body * { visibility: hidden; }
 
-    /* 2. 印刷専用エリアとその中身だけを表示する */
+    /* 3. 印刷専用エリアのみ表示し、グリッドレイアウト（2列）を適用 */
     .print-only-area, .print-only-area * { visibility: visible; }
 
     .print-only-area {
         display: grid !important;
-        grid-template-columns: 1fr 1fr; /* A4幅に2列並べる */
-        gap: 8mm; /* カード同士の隙間 */
+        grid-template-columns: 1fr 1fr; /* 2列並べる */
+        gap: 5mm; /* カード同士の隙間（裁断用） */
         position: absolute;
-        top: 0; left: 0;
-        width: 190mm; /* A4の有効幅に合わせる */
-        padding: 10mm;
+        top: 0;
+        left: 0;
+        width: 190mm; /* A4の幅から余白を引いたサイズ */
         background: white !important;
+        padding: 0;
+        margin: 0;
     }
 
-    /* 3. 各カードの枠（A4に収まるようにサイズを定義） */
+    /* 4. 各カードの枠（A4の約1/4サイズ） */
     .id-card-print-item {
-        width: 90mm;   /* A4横に2枚並ぶサイズ */
-        height: 132mm; /* 元のIDカードの比率(680:1000)を維持 */
+        width: 90mm;
+        height: 132mm; /* 2段並んでもA4に収まる高さ */
         page-break-inside: avoid;
-        margin-bottom: 5mm;
+        display: flex !important;
+        justify-content: center;
+        align-items: center;
+        border: 1px dashed #ccc; /* 裁断の目安になる薄い点線 */
+        position: relative;
+        overflow: hidden;
     }
 
-    /* 4. ★最重要：IDカードのデザインを印刷でも強制適用する */
+    /* 5. カード自体のスケーリング（4枚収まるよう縮小率を調整） */
     .id-card-print-item .id-card {
-        width: 680px !important;  /* 元の設計サイズ */
+        width: 680px !important;
         height: 1000px !important;
-        transform: scale(0.38);    /* 90mm幅に収まるように縮小 */
-        transform-origin: top left;
-        position: relative !important;
-        display: flex !important;
+        /* A4の1/4に収まるよう 0.47倍に縮小 */
+        transform: scale(0.47) !important; 
+        transform-origin: center center;
         
-        /* インク節約設定を無効化してグラデーションを出す */
+        position: absolute !important;
+        margin: 0 !important;
+        border: none !important;
+        
+        box-shadow: 0 0 0 2px #0d47a1 !important; 
+        
+        /* 描画の安定化設定 */
+        outline: 1px solid transparent; 
+        backface-visibility: hidden;
+        
+        flex-shrink: 0;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
-        color-adjust: exact !important;
     }
 
-    /* 印刷時の位置ずれ防止 */
-    .id-card-wrapper { display: none !important; }
+    /* 4枚ごとに改ページさせる制御 */
+    .id-card-print-item:nth-child(4n) {
+        page-break-after: always;
+    }
+
+    /* 不要な要素の完全排除 */
+    .id-card-wrapper, .modal, .modal-backdrop, .no-print { display: none !important; }
 }
 
 /* テーブルのヘッダー固定を確実にする */
@@ -484,9 +504,14 @@
                         <td class="fw-bold text-nowrap">{{ c.name }}</td>
                         <td class="text-center font-monospace">{{ c.bajId || '-' }}</td>
                         <td class="text-center">
-                            <span v-if="c.license" class="badge bg-warning text-dark me-1" style="font-size: 0.75rem;">{{ c.license }}</span>
-                            <span v-if="c.hasUmpire" class="badge bg-info text-white" style="font-size: 0.75rem;">3級審判</span>
-                        </td>
+    <span v-if="c.license" class="badge bg-warning text-dark me-1" style="font-size: 0.75rem;">{{ c.license }}</span>
+    <span v-if="c.umpireLevel" class="badge bg-info text-white" style="font-size: 0.75rem;">
+        {{ c.umpireLevel }}級審判
+    </span>
+    <span v-else-if="c.hasUmpire" class="badge bg-info text-white" style="font-size: 0.75rem;">
+        3級審判
+    </span>
+</td>
                         <td class="text-center small">{{ c.expireDate }}</td>
                     </tr>
                     <tr v-if="filteredCoachRows.length === 0">
@@ -1097,10 +1122,17 @@
                                 <input type="text" class="form-control" v-model="newCoach.name" placeholder="例: 神奈川 次郎">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label fw-bold">BAJ登録番号</label>
-                                <input type="text" class="form-control" v-model="newCoach.nbaId" placeholder="会員番号">
-                            </div>
-                            <div class="col-md-4">
+    <label class="form-label fw-bold">BAJ登録番号 (10桁)</label>
+    <input type="text" class="form-control" 
+           v-model="newCoach.nbaId" 
+           placeholder="例: 1234567890"
+           maxlength="10" 
+           inputmode="numeric" 
+           pattern="\d{10}">
+    <div v-if="newCoach.nbaId && newCoach.nbaId.length !== 10" class="small text-danger">
+        ※10桁で入力してください
+    </div>
+</div> <div class="col-md-4">
     <label class="form-label fw-bold">有効期限</label>
     <input type="date" class="form-control bg-light" value="2027-03-31" readonly>
     <div class="small text-muted">連盟規定により固定</div>
@@ -1113,14 +1145,16 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">審判資格</label>
-                                <div class="mt-2">
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" v-model="newCoach.hasUmpire" id="umpireCheck">
-                                        <label class="form-check-label fw-bold" for="umpireCheck">3級審判員</label>
-                                    </div>
-                                </div>
-                            </div>
+    <label class="form-label fw-bold">審判資格</label>
+    <div class="mt-1">
+        <select class="form-select" v-model="newCoach.umpireLevel">
+            <option value="">なし</option>
+            <option value="1">公認1級審判員</option>
+            <option value="2">公認2級審判員</option>
+            <option value="3">公認3級審判員</option>
+        </select>
+    </div>
+</div>
                             <div class="col-12 text-end">
                                 <button class="btn btn-dark fw-bold px-4" @click="addCoach" :disabled="!newCoach.name">
                                     <i class="bi bi-plus-circle"></i> リストに追加
@@ -1152,9 +1186,15 @@
                                         <div class="small text-muted">No. {{ c.nbaId || c.bajId || '-' }}</div>
                                     </td>
                                     <td>
-                                        <span v-if="c.license" class="badge bg-warning text-dark me-1">{{ c.license }}</span>
-                                        <span v-if="c.hasUmpire" class="badge bg-info text-white">3級審判</span>
-                                    </td>
+    <span v-if="c.license" class="badge bg-warning text-dark me-1">{{ c.license }}</span>
+
+    <span v-if="c.umpireLevel" class="badge bg-info text-white">
+        {{ c.umpireLevel }}級審判
+    </span>
+    <span v-else-if="c.hasUmpire" class="badge bg-info text-white">
+        3級審判
+    </span>
+</td>
                                     <td>{{ c.expireDate }}</td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-primary fw-bold me-2" @click="downloadIdCard(c)">
@@ -1188,30 +1228,35 @@
                         </div>
                         <div class="card-footer-area">
                             <div class="license-badges">
-                                <div v-if="printCoach.license" class="badge-license badge-coach">{{ printCoach.license }}</div>
-                                <div v-if="printCoach.hasUmpire" class="badge-license badge-umpire">3級審判員</div>
+                                <div v-if="printCoach.license" class="badge-license badge-coach">
+                                    {{ printCoach.license }}
+                                </div>
+                                <div v-if="printCoach.umpireLevel" class="badge-license badge-umpire">
+                                    {{ printCoach.umpireLevel }}級審判員
+                                </div>
+                                <div v-else-if="printCoach.hasUmpire" class="badge-license badge-umpire">
+                                    3級審判員
+                                </div>
                             </div>
+                            
                             <div class="valid-date">
-    <div class="valid-label">VALID THRU</div>
-    <div class="valid-value">2027.03.31</div>
-</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="save-area mt-4 mb-4 text-center">
+                                <div class="valid-label">VALID THRU</div>
+                                <div class="valid-value">2027.03.31</div>
+                            </div>
+                        </div> </div> </div> <div class="save-area mt-4 mb-4 text-center">
                     <button @click="saveData(false)" class="btn btn-primary btn-lg px-5" :disabled="isSaving">
                         <i class="bi bi-save"></i> データを連盟へ保存
                     </button>
 </div>
 
                 <div class="print-only-area">
-    <div v-for="coach in parseCoaches(coachList)" :key="coach.name" class="id-card-print-item">
-        <div class="id-card print-design-fix">
+    <div v-for="(coach, index) in parseCoaches(coachList)" :key="index" class="id-card-print-item">
+        <div class="id-card">
             <div class="card-header-area">
                 <div class="assoc-name">神奈川県</div>
                 <div class="card-title-box">OFFICIAL COACH</div>
             </div>
+
             <div class="card-body-area">
                 <div class="team-name">{{ form.univ_name }}</div>
                 <div class="coach-name">{{ coach.name }}</div>
@@ -1222,22 +1267,27 @@
                     </div>
                 </div>
             </div>
+
             <div class="card-footer-area">
                 <div class="license-badges">
                     <div v-if="coach.license" class="badge-license badge-coach">{{ coach.license }}</div>
-                    <div v-if="coach.hasUmpire" class="badge-license badge-umpire">3級審判員</div>
+                    
+                    <div v-if="coach.umpireLevel" class="badge-license badge-umpire">
+                        {{ coach.umpireLevel }}級審判員
+                    </div>
+                    <div v-else-if="coach.hasUmpire" class="badge-license badge-umpire">
+                        3級審判員
+                    </div>
                 </div>
+                
                 <div class="valid-date">
                     <div class="valid-label">VALID THRU</div>
-                    <div class="valid-value">{{ coach.expireDate ? coach.expireDate.replace(/-/g, '.') : '2027.03.31' }}</div>
+                    <div class="valid-value">2027.03.31</div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-                
-
-                    <p class="text-muted small mt-2">※リストへの追加・削除時は自動で一時保存されますが、最後にこのボタンを押すと確実です。</p>
+        </div> </div> </div><p class="text-muted small mt-2">
+    ※リストへの追加・削除時は自動で一時保存されますが、最後にこのボタンを押すと確実です。
+</p>
 </div></div></div></div></div></div>
         <div v-if="detailModal.show" class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
                 <div class="modal-dialog modal-dialog-scrollable">
@@ -1456,7 +1506,13 @@
             chatUnsubscribe: null,
             adminChatModal: { show: false, univId: '', univName: '' },
 coachList: [],
-                    newCoach: { name: '', nbaId: '', expireDate: '2027-03-31', license: '', hasUmpire: false },
+                    newCoach: { 
+    name: '', 
+    nbaId: '', 
+    expireDate: '2027-03-31', 
+    license: '', 
+    umpireLevel: '' 
+},
                     printCoach: {},
         }
     },
@@ -1498,6 +1554,7 @@ coachList: [],
                         name: c.name,
                         bajId: c.bajId || c.nbaId || '',
                         license: c.license,
+umpireLevel: c.umpireLevel,
                         hasUmpire: c.hasUmpire,
                         expireDate: c.expireDate,
                         idKey: rec.univ_id + "_" + c.name + "_" + (c.bajId || Math.random()) // 重複防止キー
@@ -2193,24 +2250,29 @@ getCategoryLabel(key) { return this.categories[key] ? this.categories[key].label
         },
 
 addCoach() {
+    // バリデーション：名前と10桁番号のチェック
     if(!this.newCoach.name) return;
+    if(!this.newCoach.nbaId || !/^\d{10}$/.test(this.newCoach.nbaId)) {
+        alert("BAJ登録番号は半角数字10桁で入力してください");
+        return;
+    }
     
     const coachData = {
         name: this.newCoach.name,
-        bajId: this.newCoach.nbaId, 
-        // ▼ここを固定値に変更します
-        expireDate: '2027-03-31', 
+        bajId: this.newCoach.nbaId,
+        expireDate: '2027-03-31',
         license: this.newCoach.license,
-        hasUmpire: this.newCoach.hasUmpire
+        umpireLevel: this.newCoach.umpireLevel, // 選択された 1, 2, 3 を保存
+        hasUmpire: this.newCoach.umpireLevel !== '' // 何か級があれば true
     };
+    
     this.coachList.push(coachData);
     
     // フォームリセット
-    this.newCoach.name = ''; 
+    this.newCoach.name = '';
     this.newCoach.nbaId = '';
-    this.newCoach.license = ''; 
-    this.newCoach.hasUmpire = false;
-    // 有効期限の入力欄はリセット不要（固定のため）
+    this.newCoach.license = '';
+    this.newCoach.umpireLevel = ''; 
     
     this.saveData(true);
 },
@@ -2262,7 +2324,7 @@ addCoach() {
                         c.name,
                         c.bajId || c.nbaId || "",
                         c.license || "なし",
-                        c.hasUmpire ? "3級審判" : "なし",
+                        c.umpireLevel ? c.umpireLevel + "級審判" : (c.hasUmpire ? "3級審判" : "なし"),
                         c.expireDate || ""
                     ].join(",");
                     csv += line + "\n";
