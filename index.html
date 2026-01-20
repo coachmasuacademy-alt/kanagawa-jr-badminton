@@ -833,7 +833,11 @@
                         <div class="row g-3">
                             <div v-if="catKey === 'reg_fee'" class="row g-3"><div class="col-md-6"><label>選手登録 (¥1,500)</label><div class="input-group"><input type="number" v-model.number="entry.reg_fee.count_player" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-6"><label>指導者登録 (¥1,500)</label><div class="input-group"><input type="number" v-model.number="entry.reg_fee.count_coach" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
                             <div v-if="catKey === 'training'" class="row g-3"><div class="col-md-4"><label>一般 (¥5,000)</label><div class="input-group"><input type="number" v-model.number="entry.training.count_general" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>指導者会員 (¥3,000)</label><div class="input-group"><input type="number" v-model.number="entry.training.count_member" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>小中高生 (¥500)</label><div class="input-group"><input type="number" v-model.number="entry.training.count_student" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
-                            <div v-if="catKey === 'class_tourney'" class="row g-3"><div class="col-md-4"><label>ビギナーズ (¥2,000/人)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_beginner" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>チャレンジ (¥2,000/人)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_challenge" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>ミックス複 (¥4,000/組)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_mix" class="form-control" min="0"><span class="input-group-text">組</span></div></div></div>
+                            
+<div v-if="catKey === 'class_tourney'" class="row g-3">
+    <div class="col-md-6"><label>ビギナーズ (¥2,000/人)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_beginner" class="form-control" min="0"><span class="input-group-text">名</span></div></div>
+    <div class="col-md-6"><label>ミックス複 (¥4,000/組)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_mix" class="form-control" min="0"><span class="input-group-text">組</span></div></div>
+</div>
                             <div v-if="catKey === 'wakaba'" class="row g-3"><div class="col-md-6"><label>参加チーム (¥15,000)</label><div class="input-group"><input type="number" v-model.number="entry.wakaba.count_team" class="form-control" min="0"><span class="input-group-text">チーム</span></div></div></div>
                             <div v-if="catKey === 'abc'" class="row g-3"><div class="col-md-6"><label>シングルス (¥2,000)</label><div class="input-group"><input type="number" v-model.number="entry.abc.count_single" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
                             <div v-if="catKey === 'umpire'" class="row g-3"><div class="col-md-6"><label>受講者数 (¥1,000)</label><div class="input-group"><input type="number" v-model.number="entry.umpire.count_person" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
@@ -1752,7 +1756,7 @@ openBroadcastModal() {
             switch(key) {
                 case 'reg_fee': return (e.count_player||0)*1500 + (e.count_coach||0)*1500;
                 case 'training': return (e.count_general||0)*5000 + (e.count_member||0)*3000 + (e.count_student||0)*500;
-                case 'class_tourney': return (e.count_beginner||0)*2000 + (e.count_challenge||0)*2000 + (e.count_mix||0)*4000;
+                case 'class_tourney': return (e.count_beginner||0)*2000 + (e.count_mix||0)*4000;
                 case 'wakaba': return (e.count_team||0)*15000;
                 case 'abc': return (e.count_single||0)*2000;
                 case 'umpire': return (e.count_person||0)*1000;
@@ -1785,7 +1789,7 @@ openBroadcastModal() {
             switch(key) {
                 case 'reg_fee': if(e.count_player) parts.push(`選手:${e.count_player}`); if(e.count_coach) parts.push(`指導者:${e.count_coach}`); break;
                 case 'training': if(e.count_general) parts.push(`一般:${e.count_general}`); if(e.count_member) parts.push(`会員:${e.count_member}`); if(e.count_student) parts.push(`学生:${e.count_student}`); break;
-                case 'class_tourney': if(e.count_beginner) parts.push(`ビギナー:${e.count_beginner}`); if(e.count_challenge) parts.push(`チャレ:${e.count_challenge}`); if(e.count_mix) parts.push(`Mix:${e.count_mix}`); break;
+                case 'class_tourney': if(e.count_beginner) parts.push(`ビギナー:${e.count_beginner}`); if(e.count_mix) parts.push(`Mix:${e.count_mix}`); break;
                 case 'wakaba': if(e.count_team) parts.push(`${e.count_team}チーム`); break;
                 case 'abc': if(e.count_single) parts.push(`${e.count_single}名`); break;
                 case 'umpire': if(e.count_person) parts.push(`${e.count_person}名`); break;
