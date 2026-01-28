@@ -452,35 +452,49 @@
                 </div>
 
                 <div class="card mb-4 border-info">
-                    <div class="card-header bg-info text-white fw-bold"><i class="bi bi-megaphone-fill"></i> 連絡事項の管理</div>
-                    <div class="card-body">
-                        <div class="row g-2">
-                            <div class="col-md-3"><input type="date" class="form-control" v-model="adminNews.date"></div>
-                            <div class="col-md-9"><input type="text" class="form-control" v-model="adminNews.title" placeholder="タイトル"></div>
-                            <div class="col-12"><textarea class="form-control" v-model="adminNews.content" rows="3" placeholder="本文"></textarea></div>
-                            <div class="col-12">
-                                <label class="form-label small fw-bold"><i class="bi bi-paperclip"></i> 添付ファイル </label>
-                                <input type="file" class="form-control form-control-sm" @change="uploadNewsFile">
-                                <div v-if="adminNews.url" class="mt-1 small text-success">
-                                    <i class="bi bi-check-circle"></i> アップロード完了
-                                    <a :href="adminNews.url" target="_blank" class="ms-2 text-decoration-none">確認</a>
-                                </div>
-                                <div v-if="isUploadingNews" class="spinner-border spinner-border-sm mt-1 text-primary"></div>
+    <div class="card-header bg-info text-white fw-bold"><i class="bi bi-megaphone-fill"></i> 連絡事項の管理</div>
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-md-3"><input type="date" class="form-control" v-model="adminNews.date"></div>
+            <div class="col-md-9"><input type="text" class="form-control" v-model="adminNews.title" placeholder="タイトル"></div>
+            <div class="col-12"><textarea class="form-control" v-model="adminNews.content" rows="3" placeholder="本文"></textarea></div>
+            
+            <div class="col-12">
+                <label class="form-label small fw-bold"><i class="bi bi-paperclip"></i> ファイルを添付（複数可）</label>
+                <input type="file" class="form-control form-control-sm" @change="uploadNewsFile" :disabled="isUploadingNews">
+                
+                <div v-if="adminNews.files && adminNews.files.length > 0" class="mt-2">
+                    <ul class="list-group list-group-sm">
+                        <li v-for="(file, fIdx) in adminNews.files" :key="fIdx" class="list-group-item d-flex justify-content-between align-items-center py-1 small">
+                            <span><i class="bi bi-file-earmark-check text-success"></i> {{ file.name }}</span>
+                            <div class="d-flex gap-2">
+                                <a :href="file.url" target="_blank" class="text-decoration-none">確認</a>
+                                <button class="btn btn-sm btn-link text-danger p-0" @click="removeAdminNewsFile(fIdx)"><i class="bi bi-x-circle"></i></button>
                             </div>
-                        </div>
-                        <div class="mt-2">
-                            <button class="btn btn-info text-white fw-bold" @click="addNews" :disabled="isUploadingNews">投稿する</button>
-                        </div>
-                        <hr>
-                        <h6 class="text-muted small">投稿済みリスト</h6>
-                        <ul class="list-group">
-                            <li v-for="(n, i) in newsList" :key="i" class="list-group-item d-flex justify-content-between align-items-center py-1">
-                                <span class="small">{{ new Date(n.date).toLocaleDateString() }} : {{ n.title }}</span>
-                                <button class="btn btn-sm btn-outline-danger" @click="deleteNews(i)">削除</button>
-                            </li>
-                        </ul>
-                    </div>
+                        </li>
+                    </ul>
                 </div>
+                <div v-if="isUploadingNews" class="mt-1 small text-primary">
+                    <div class="spinner-border spinner-border-sm" role="status"></div> アップロード中...
+                </div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <button class="btn btn-info text-white fw-bold" @click="addNews" :disabled="isUploadingNews || !adminNews.title">この内容で投稿する</button>
+        </div>
+        <hr>
+        <h6 class="text-muted small">投稿済みリスト</h6>
+        <ul class="list-group">
+            <li v-for="(n, i) in newsList" :key="i" class="list-group-item d-flex justify-content-between align-items-center py-1">
+                <span class="small">
+                    <strong>{{ new Date(n.date).toLocaleDateString() }}</strong> : {{ n.title }}
+                    <span v-if="n.files && n.files.length > 0" class="badge bg-light text-dark border ms-2">📎 {{ n.files.length }}</span>
+                </span>
+                <button class="btn btn-sm btn-outline-danger" @click="deleteNews(i)">削除</button>
+            </li>
+        </ul>
+    </div>
+</div>
 
 <div class="card mb-4 border-dark">
     <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
@@ -716,21 +730,30 @@
         <div class="card-body p-4">
 
             <div v-if="activeTab === 'home'">
-                <h4 class="mb-4 text-primary"><i class="bi bi-info-circle-fill"></i> 連絡事項・ニュース</h4>
-                <div v-if="newsList.length === 0" class="alert alert-secondary">現在、連絡事項はありません。</div>
-                <div v-else class="list-group">
-                    <div v-for="(news, idx) in newsList" :key="idx" class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1 fw-bold">{{ news.title }}</h5>
-                            <small class="text-muted">{{ new Date(news.date).toLocaleDateString() }}</small>
-                        </div>
-                        <p class="mb-1 mt-2" style="white-space: pre-wrap;">{{ news.content }}</p>
-                        <div v-if="news.url" class="mt-2 border-top pt-2">
-                            <a :href="news.url" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-paperclip"></i> 添付ファイルを開く</a>
-                        </div>
-                    </div>
+    <h4 class="mb-4 text-primary"><i class="bi bi-info-circle-fill"></i> 連絡事項・ニュース</h4>
+    <div v-if="newsList.length === 0" class="alert alert-secondary">現在、連絡事項はありません。</div>
+    <div v-else class="list-group">
+        <div v-for="(news, idx) in newsList" :key="idx" class="list-group-item shadow-sm mb-3 border-start border-4 border-primary">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1 fw-bold text-dark">{{ news.title }}</h5>
+                <small class="text-muted">{{ new Date(news.date).toLocaleDateString() }}</small>
+            </div>
+            <p class="mb-2 mt-2" style="white-space: pre-wrap; line-height: 1.6;">{{ news.content }}</p>
+            
+            <div v-if="news.files && news.files.length > 0" class="mt-3 border-top pt-2">
+                <div class="small fw-bold text-muted mb-2"><i class="bi bi-paperclip"></i> 添付ファイル:</div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a v-for="(file, fIdx) in news.files" :key="fIdx" :href="file.url" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-file-earmark-text"></i> {{ file.name || 'ファイル' + (fIdx + 1) }}
+                    </a>
                 </div>
             </div>
+            <div v-else-if="news.url" class="mt-2 border-top pt-2">
+                <a :href="news.url" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-paperclip"></i> 添付ファイルを開く</a>
+            </div>
+        </div>
+    </div>
+</div>
 
             <div v-if="activeTab === 'chat'">
                 <h4 class="mb-4 text-primary"><i class="bi bi-chat-dots-fill"></i> 運営とのメッセージ</h4>
@@ -1449,7 +1472,7 @@
                     isLoading: false, isSaving: false, isUploading: false,
                     masterData: [], savedRecords: [], newsList: [],
                     activeTab: 'home',
-                    adminNews: { date: '', title: '', content: '', url: '' }, isUploadingNews: false,
+                   adminNews: { date: '', title: '', content: '', files: [] }, isUploadingNews: false,
                     account: { newEmail: '', newPass: '' },
                     form: { univ_id: '', univ_name: '', representative: '' }, memo: '',coachSearchQuery: '',
                     
@@ -1948,10 +1971,45 @@ deleteExcel(category) {
 },
 
         uploadNewsFile(event) {
-            const file = event.target.files[0]; if (!file) return; this.isUploadingNews = true;
-            const path = `news/${Date.now()}_${file.name}`;
-            firebase.storage().ref().child(path).put(file).then(s => s.ref.getDownloadURL()).then(url => { this.adminNews.url = url; this.isUploadingNews = false; }).catch(e => { alert("アップロード失敗: " + e.message); this.isUploadingNews = false; });
-        },
+    const file = event.target.files[0]; 
+    if (!file) return; 
+    
+    this.isUploadingNews = true;
+    const fileName = file.name;
+    const path = `news/${Date.now()}_${fileName}`;
+    
+    firebase.storage().ref().child(path).put(file)
+        .then(s => s.ref.getDownloadURL())
+        .then(url => { 
+            // 配列に追加
+            if(!this.adminNews.files) this.adminNews.files = [];
+            this.adminNews.files.push({ name: fileName, url: url });
+            this.isUploadingNews = false; 
+            // inputをリセットして同じファイルを再度選択可能にする
+            event.target.value = '';
+        })
+        .catch(e => { 
+            alert("アップロード失敗: " + e.message); 
+            this.isUploadingNews = false; 
+        });
+},
+
+removeAdminNewsFile(index) {
+    this.adminNews.files.splice(index, 1);
+},
+
+addNews() { 
+    if(!this.adminNews.date || !this.adminNews.title) return alert("日付とタイトルは必須です"); 
+    
+    // 投稿リストに追加
+    this.newsList.unshift({ ...this.adminNews }); 
+    this.saveNews(); 
+    
+    // フォームリセット
+    this.adminNews = { date: '', title: '', content: '', files: [] }; 
+},
+
+
         updateAccount() {
             const user = firebase.auth().currentUser; const promises = [];
             if (this.account.newEmail) promises.push(user.updateEmail(this.account.newEmail));
