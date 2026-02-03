@@ -1445,7 +1445,7 @@
         </div> </div> </div> <script>
 
         // ★★★ ここをご自身のAPIキーに書き換えてください ★★★
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbykvHJZkLbpdtmfhUlQx8D01jRpy490jbjJGd2G8tMZnvgG2rcWiDoFPR1qaG9IH7PJEw/exec";
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwuqBbPb1MDJP_lwuE6Ge0Vb4rMXzYBeSggynOFnJyx6cPCrOOibGsPQc5ZdRqFxx4IOA/exec";
 
         const firebaseConfig = {
           apiKey: "AIzaSyCAQorZttgQhUzM30-gHW18MvfcDwtTSUc",
@@ -1999,16 +1999,27 @@ removeAdminNewsFile(index) {
 },
 
 addNews() { 
-    if(!this.adminNews.date || !this.adminNews.title) return alert("日付とタイトルは必須です"); 
-    
-    // 投稿リストに追加
-    this.newsList.unshift({ ...this.adminNews }); 
-    this.saveNews(); 
-    
-    // フォームリセット
-    this.adminNews = { date: '', title: '', content: '', files: [] }; 
-},
+            if(!this.adminNews.date || !this.adminNews.title) return alert("日付とタイトルは必須です"); 
+            
+            // 【修正箇所】JSON.parse(JSON.stringify(...)) を使って「深いコピー」を作成します。
+            // これにより、files配列の中身も完全に新しいデータとして複製され、
+            // フォームのリセットや参照の影響を受けなくなります。
+            const newsItem = JSON.parse(JSON.stringify(this.adminNews));
 
+            // filesが万が一 undefined の場合は空配列にしておく安全策
+            if (!newsItem.files) {
+                newsItem.files = [];
+            }
+
+            // 投稿リストに追加
+            this.newsList.unshift(newsItem); 
+            
+            // データを保存
+            this.saveNews(); 
+            
+            // フォームリセット
+            this.adminNews = { date: '', title: '', content: '', files: [] }; 
+        },
 
         updateAccount() {
             const user = firebase.auth().currentUser; const promises = [];
