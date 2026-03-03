@@ -816,24 +816,30 @@
                             <span class="badge bg-light text-dark border me-2">
                                 {{ item.player_grade || '-' }}
                             </span>
-                            <span class="fw-bold fs-5">{{ item.player_name || '名称未設定' }}</span>
+                            
                         </div>
-                        <div class="badge bg-warning text-dark border border-dark mb-2">{{ item.level }}</div>
-                        <p class="card-text small bg-light p-2 rounded" style="white-space: pre-wrap; min-height: 60px;">{{ item.comment }}</p>
-                        
-                        <div class="mt-3 text-center">
-                            <button v-if="item.univ_id !== form.univ_id" class="btn btn-outline-success w-100 fw-bold" @click="openDirectChat(item.univ_id, item.univ_name)">
-                                <i class="bi bi-chat-dots-fill"></i> メッセージを送る
-                            </button>
-                            <button v-else class="btn btn-sm btn-outline-danger w-100" @click="deleteRecruit(item.id)">
-                                <i class="bi bi-trash"></i> 募集を削除
-                            </button>
-                                </div>
+                        <div class="mb-2">
+    <span v-for="l in item.levels" :key="l" class="badge rounded-pill bg-info text-dark me-1" style="font-size: 0.75rem;">
+        {{ l }}
+    </span>
+</div>
+
+<p class="card-text small bg-light p-2 rounded" style="white-space: pre-wrap; min-height: 60px;">
+    {{ item.comment }}
+</p>
+
+<div class="mt-3 text-center">
+    <button v-if="item.univ_id !== form.univ_id" class="btn btn-outline-success w-100 fw-bold" @click="openDirectChat(item.univ_id, item.univ_name)">
+        <i class="bi bi-chat-dots-fill"></i> メッセージを送る
+    </button>
+    <button v-else class="btn btn-sm btn-outline-danger w-100" @click="deleteRecruit(item.id)">
+        <i class="bi bi-trash"></i> 募集を削除
+    </button>
+</div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
+                
 
             <template v-for="(catName, catKey) in categories" :key="catKey">
                 <div v-if="activeTab === catKey">
@@ -841,7 +847,12 @@
                         <h4 class="text-primary"><i class="bi bi-folder2-open"></i> {{ catName.label }}</h4>
                     </div>
 
-                    <div class="alert alert-info small"><i class="bi bi-exclamation-circle-fill"></i> 申込用紙(Excel)をアップロードし、内訳を入力してください。</div>
+                   <div v-if="catKey === 'training'" class="alert alert-warning small">
+    <i class="bi bi-info-circle-fill"></i> このカテゴリは<strong>申込ファイル(Excel)のアップロードのみ</strong>行います。人数の入力や本システムでの支払いは不要です。
+</div>
+<div v-else class="alert alert-info small">
+    <i class="bi bi-exclamation-circle-fill"></i> 申込用紙(Excel)をアップロードし、内訳を入力してください。
+</div>
                     
                     <div class="excel-upload-area">
                         <label class="form-label fw-bold">申込ファイル(Excel)のアップロード</label>
@@ -860,12 +871,26 @@
                         </div>
                     </div>
 
-                    <div class="count-input-group mb-4">
-                        <h6 class="border-bottom pb-2 mb-3">参加・登録数 入力</h6>
-                        <div class="row g-3">
-                            <div v-if="catKey === 'reg_fee'" class="row g-3"><div class="col-md-6"><label>選手登録 (¥1,500)</label><div class="input-group"><input type="number" v-model.number="entry.reg_fee.count_player" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-6"><label>指導者登録 (¥1,500)</label><div class="input-group"><input type="number" v-model.number="entry.reg_fee.count_coach" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
-                            <div v-if="catKey === 'training'" class="row g-3"><div class="col-md-4"><label>一般 (¥5,000)</label><div class="input-group"><input type="number" v-model.number="entry.training.count_general" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>指導者会員 (¥3,000)</label><div class="input-group"><input type="number" v-model.number="entry.training.count_member" class="form-control" min="0"><span class="input-group-text">名</span></div></div><div class="col-md-4"><label>小中高生 (¥500)</label><div class="input-group"><input type="number" v-model.number="entry.training.count_student" class="form-control" min="0"><span class="input-group-text">名</span></div></div></div>
-                            
+                    <div v-if="catKey !== 'training'" class="count-input-group mb-4">
+    <h6 class="border-bottom pb-2 mb-3">参加・登録数 入力</h6>
+    <div class="row g-3">
+        <div v-if="catKey === 'reg_fee'" class="row g-3">
+            <div class="col-md-6">
+                <label>選手登録 (¥1,500)</label>
+                <div class="input-group">
+                    <input type="number" v-model.number="entry.reg_fee.count_player" class="form-control" min="0">
+                    <span class="input-group-text">名</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label>指導者登録 (¥1,500)</label>
+                <div class="input-group">
+                    <input type="number" v-model.number="entry.reg_fee.count_coach" class="form-control" min="0">
+                    <span class="input-group-text">名</span>
+                </div>
+            </div>
+        </div>
+                                                        
 <div v-if="catKey === 'class_tourney'" class="row g-3">
     <div class="col-md-6"><label>ビギナーズ (¥2,000/人)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_beginner" class="form-control" min="0"><span class="input-group-text">名</span></div></div>
     <div class="col-md-6"><label>ミックス複 (¥4,000/組)</label><div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_mix" class="form-control" min="0"><span class="input-group-text">組</span></div></div>
@@ -949,7 +974,7 @@
                         </div>
                     </div>
 
-                    <div class="payment-box">
+                    <div class="payment-box" v-if="catKey !== 'training'">
                         <div class="text-center">
                             <h5 class="text-dark mb-1">合計支払額: <strong>{{ formatMoney(calculateCategoryTotal(catKey)) }}</strong></h5>
 
@@ -989,11 +1014,11 @@
                             </div>
                         </div>
                     </div>
-                </div> </template> <div v-if="categories[activeTab]" class="save-area">
-                <button @click="saveData(false)" class="btn btn-primary btn-lg px-5" :disabled="isSaving">
-                    <i class="bi bi-save"></i> データ保存
-                </button>
-            </div>
+                </div> </template> <div v-if="categories[activeTab] && activeTab !== 'training'" class="save-area">
+    <button @click="saveData(false)" class="btn btn-primary btn-lg px-5" :disabled="isSaving">
+        <i class="bi bi-save"></i> データ保存
+    </button>
+</div>
 
             <div v-if="activeTab === 'settlement'">
                 <div class="d-flex justify-content-between align-items-center mb-4 no-print"><h4><i class="bi bi-file-earmark-spreadsheet-fill"></i> ⑫ 支払明細</h4><button onclick="window.print()" class="btn btn-dark"><i class="bi bi-printer"></i> 印刷 / PDF保存</button></div>
@@ -1035,15 +1060,15 @@
 
 
 <div v-if="showRecruitModal" class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header bg-success text-white">
-                            <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square"></i> ペア・練習相手を募集</h5>
-                            <button type="button" class="btn-close btn-close-white" @click="showRecruitModal = false"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">カテゴリー</label>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square"></i> 募集を投稿</h5>
+                <button type="button" class="btn-close btn-close-white" @click="showRecruitModal = false"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">カテゴリー</label>
                     <select v-model="newRecruit.category" class="form-select">
                         <option v-for="(cat, key) in categories" :value="key" :key="key">{{ cat.label }}</option>
                     </select>
@@ -1051,46 +1076,54 @@
 
                 <div class="row g-2 mb-3">
                     <div class="col-6">
-                        <label class="form-label fw-bold">選手氏名</label>
-                        <input type="text" class="form-control" v-model="newRecruit.name" placeholder="氏名を入力">
-                    </div>
-                    <div class="col-3">
-                        <label class="form-label fw-bold">性別</label>
+                        <label class="form-label fw-bold">募集する相手の性別</label>
                         <select v-model="newRecruit.gender" class="form-select">
                             <option>男</option>
                             <option>女</option>
+                            <option>両方</option>
                         </select>
                     </div>
-                    <div class="col-3">
-                        <label class="form-label fw-bold">学年</label>
-                        <select v-model="newRecruit.grade" class="form-select">
-                            <option>小1</option><option>小2</option><option>小3</option>
-                            <option>小4</option><option>小5</option><option>小6</option>
-                            <option>中学</option><option>その他</option>
-                        </select>
+                    <div class="col-6">
+                        <label class="form-label fw-bold">募集人数</label>
+                        <div class="input-group">
+                            <input type="number" v-model.number="newRecruit.count" class="form-control" min="1">
+                            <span class="input-group-text">名/組</span>
+                        </div>
                     </div>
                 </div>
+
                 <div class="mb-3">
-                    <label class="form-label fw-bold">レベル感</label>
-                    <select v-model="newRecruit.level" class="form-select">
-                        <option>初級者</option>
-                        <option>中級者</option>
-                        <option>上級者</option>
-                        <option>誰でもOK</option>
-                    </select>
+                    <label class="form-label fw-bold d-block">対象学年（複数選択可）</label>
+                    <div class="d-flex flex-wrap gap-2 p-2 border rounded bg-light">
+                        <div v-for="g in ['小1','小2','小3','小4','小5','小6']" :key="g" class="form-check form-check-inline m-0 me-2">
+                            <input class="form-check-input" type="checkbox" :id="'g-'+g" :value="g" v-model="newRecruit.grades">
+                            <label class="form-check-label small" :for="'g-'+g">{{ g }}</label>
+                        </div>
+                    </div>
                 </div>
+
+                <div class="mb-3">
+    <label class="form-label fw-bold d-block">希望するレベル（複数選択可）</label>
+    <div class="d-flex flex-wrap gap-2 p-2 border rounded bg-light">
+        <div v-for="l in ['初級者','中級者','上級者']" :key="l" class="form-check form-check-inline m-0 me-2">
+            <input class="form-check-input" type="checkbox" :id="'l-'+l" :value="l" v-model="newRecruit.levels">
+            <label class="form-check-label small" :for="'l-'+l">{{ l }}</label>
+        </div>
+    </div>
+</div>
+
                 <div class="mb-3">
                     <label class="form-label fw-bold">コメント・詳細</label>
-                                <textarea v-model="newRecruit.comment" class="form-control" rows="4" placeholder="例：〇〇大会に向けてダブルスのペアを探しています。バドミントンを始めて1年程です。"></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @click="showRecruitModal = false">キャンセル</button>
-                            <button type="button" class="btn btn-success fw-bold" @click="saveRecruit">投稿する</button>
-                        </div>
-                    </div>
+                    <textarea v-model="newRecruit.comment" class="form-control" rows="4" placeholder="例：〇〇大会に向けてダブルスのペアを探しています。"></textarea>
                 </div>
             </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @click="showRecruitModal = false">キャンセル</button>
+                <button type="button" class="btn btn-success fw-bold" @click="saveRecruit">投稿する</button>
+            </div>
+        </div>
+    </div>
+</div>
 
             <div v-if="directChat.show" class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
                 <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -1787,7 +1820,7 @@ openBroadcastModal() {
             }
             switch(key) {
                 case 'reg_fee': return (e.count_player||0)*1500 + (e.count_coach||0)*1500;
-                case 'training': return (e.count_general||0)*5000 + (e.count_member||0)*3000 + (e.count_student||0)*500;
+                case 'training': return 0; // 金額を常に 0 に修正
                 case 'class_tourney': return (e.count_beginner||0)*2000 + (e.count_mix||0)*4000;
                 case 'wakaba': return (e.count_team||0)*15000;
                 case 'abc': return (e.count_single||0)*2000;
@@ -1820,7 +1853,7 @@ openBroadcastModal() {
             }
             switch(key) {
                 case 'reg_fee': if(e.count_player) parts.push(`選手:${e.count_player}`); if(e.count_coach) parts.push(`指導者:${e.count_coach}`); break;
-                case 'training': if(e.count_general) parts.push(`一般:${e.count_general}`); if(e.count_member) parts.push(`会員:${e.count_member}`); if(e.count_student) parts.push(`学生:${e.count_student}`); break;
+                case 'training': parts.push("申込書提出のみ"); break;
                 case 'class_tourney': if(e.count_beginner) parts.push(`ビギナー:${e.count_beginner}`); if(e.count_mix) parts.push(`Mix:${e.count_mix}`); break;
                 case 'wakaba': if(e.count_team) parts.push(`${e.count_team}チーム`); break;
                 case 'abc': if(e.count_single) parts.push(`${e.count_single}名`); break;
@@ -2249,40 +2282,38 @@ if (d.coaches) {
 getCategoryLabel(key) { return this.categories[key] ? this.categories[key].label : key; },
         
         openRecruitModal() { 
-            // 初期化時に新しい項目（name, grade, gender）を追加
-            this.newRecruit = { 
-                category: 'class_tourney', 
-                level: '初級者', 
-                comment: '', 
-                name: '', 
-                grade: '小6', 
-                gender: '男' 
-            }; 
-            this.showRecruitModal = true; 
-        },
+    this.newRecruit = { 
+        category: 'class_tourney', 
+        levels: [], // 配列に変更
+        comment: '', 
+        grades: [], 
+        gender: '男',
+        count: 1 
+    }; 
+    this.showRecruitModal = true; 
+},
 
         saveRecruit() {
-            // バリデーション（入力チェック）
-            if(!this.newRecruit.comment) return alert("コメントを入力してください");
-            if(!this.newRecruit.name) return alert("氏名を入力してください");
+    if(!this.newRecruit.comment) return alert("コメントを入力してください");
+    if(this.newRecruit.grades.length === 0) return alert("対象学年を選択してください");
+    if(this.newRecruit.levels.length === 0) return alert("希望レベルを選択してください");
 
-            const data = {
-                univ_id: this.form.univ_id,
-                univ_name: this.form.univ_name,
-                category: this.newRecruit.category,
-                level: this.newRecruit.level,
-                comment: this.newRecruit.comment,
-                // ★追加データを保存
-                player_name: this.newRecruit.name,
-                player_grade: this.newRecruit.grade,
-                player_gender: this.newRecruit.gender,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            db.collection('recruits').add(data).then(() => {
-                this.showRecruitModal = false;
-                alert("募集を投稿しました");
-            }).catch(e => alert("エラー: " + e.message));
-        },
+    const data = {
+        univ_id: this.form.univ_id,
+        univ_name: this.form.univ_name,
+        category: this.newRecruit.category,
+        levels: this.newRecruit.levels,      // 配列で保存
+        comment: this.newRecruit.comment,
+        player_grades: this.newRecruit.grades,
+        player_gender: this.newRecruit.gender,
+        recruit_count: this.newRecruit.count,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    db.collection('recruits').add(data).then(() => {
+        this.showRecruitModal = false;
+        alert("募集を投稿しました");
+    }).catch(e => alert("エラー: " + e.message));
+},
 
         deleteRecruit(id) {
             if(!confirm("この募集を削除しますか？")) return;
