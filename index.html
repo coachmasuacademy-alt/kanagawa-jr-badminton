@@ -1585,45 +1585,76 @@
                                 </div>
 
 
-                                <template v-for="(catName, catKey) in categories" :key="catKey">
-                                    <div v-if="activeTab === catKey">
-                                        <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <h4 class="text-primary"><i class="bi bi-folder2-open"></i> {{ catName.label
-                                                }}</h4>
-                                        </div>
+<template v-for="(catName, catKey) in categories" :key="catKey">
+    <div v-if="activeTab === catKey">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="text-primary"><i class="bi bi-folder2-open"></i> {{ catName.label }}</h4>
+        </div>
 
-                                        <div v-if="catKey === 'training'" class="alert alert-warning small">
-                                            <i class="bi bi-info-circle-fill"></i>
-                                            このカテゴリは<strong>申込ファイル(Excel)のアップロードのみ</strong>行います。人数の入力や本システムでの支払いは不要です。
-                                        </div>
-                                        <div v-else class="alert alert-info small">
-                                            <i class="bi bi-exclamation-circle-fill"></i>
-                                            申込用紙(Excel)をアップロードし、内訳を入力してください。
-                                        </div>
+        <div v-if="catKey === 'training'" class="alert alert-warning small">
+            <i class="bi bi-info-circle-fill"></i>
+            このカテゴリは<strong>申込ファイル(Excel)のアップロードのみ</strong>行います。
+        </div>
+        <div v-else class="alert alert-info small">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            申込用紙(Excel)をアップロードし、内訳を入力してください。
+        </div>
 
-                                        <div class="excel-upload-area">
-                                            <label class="form-label fw-bold">申込ファイル(Excel)のアップロード</label>
-                                            <div v-if="entry[catKey].excel_url" class="mt-3">
-                                                <div class="d-flex align-items-center justify-content-center gap-2">
-                                                    <span class="badge bg-success"><i
-                                                            class="bi bi-file-earmark-excel"></i> アップロード済み</span>
-                                                    <button class="btn btn-sm btn-outline-danger"
-                                                        @click="deleteExcel(catKey)">
-                                                        <i class="bi bi-trash"></i> 削除
-                                                    </button>
-                                                </div>
-                                                <a :href="entry[catKey].excel_url" target="_blank"
-                                                    class="d-block mt-1 small">確認する</a>
-                                            </div>
-                                            <div v-else>
-                                                <input type="file" class="form-control w-75 mx-auto"
-                                                    accept=".xlsx, .xls" @change="uploadExcel($event, catKey)">
-                                                <div v-if="isUploading"
-                                                    class="spinner-border spinner-border-sm mt-2 text-primary"></div>
-                                            </div>
-                                        </div>
+        <div v-if="catKey === 'class_tourney'" class="mb-4">
+    <div class="row g-2">
+        <div class="col-md-6">
+            <div class="excel-upload-area" style="background-color: #f8f9fa; border-style: solid; padding: 15px;">
+                <label class="form-label fw-bold text-secondary small">【ビギナーズ】申込ファイル</label>
+                <div v-if="entry.class_tourney.excel_url_beginner">
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <span class="badge bg-success">アップロード済み</span>
+                        <button class="btn btn-sm btn-outline-danger" @click="deleteSpecificExcel('class_tourney', 'excel_url_beginner')">削除</button>
+                    </div>
+                    <a :href="entry.class_tourney.excel_url_beginner" target="_blank" class="d-block mt-2 small text-decoration-none">
+                        <i class="bi bi-eye"></i> ビギナーズファイルを確認
+                    </a>
+                </div>
+                <div v-else>
+                    <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'class_tourney', 'excel_url_beginner')">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="excel-upload-area" style="background-color: #f8f9fa; border-style: solid; padding: 15px;">
+                <label class="form-label fw-bold text-primary small">【ミックス複】申込ファイル</label>
+                <div v-if="entry.class_tourney.excel_url_mix">
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <span class="badge bg-primary">アップロード済み</span>
+                        <button class="btn btn-sm btn-outline-danger" @click="deleteSpecificExcel('class_tourney', 'excel_url_mix')">削除</button>
+                    </div>
+                    <a :href="entry.class_tourney.excel_url_mix" target="_blank" class="d-block mt-2 small text-decoration-none">
+                        <i class="bi bi-eye"></i> ミックス複ファイルを確認
+                    </a>
+                </div>
+                <div v-else>
+                    <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'class_tourney', 'excel_url_mix')">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-                                        <div v-if="catKey !== 'training'" class="count-input-group mb-4">
+        <div v-else class="excel-upload-area">
+            <label class="form-label fw-bold">申込ファイル(Excel)のアップロード</label>
+            <div v-if="entry[catKey].excel_url" class="mt-3">
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <span class="badge bg-success"><i class="bi bi-file-earmark-excel"></i> アップロード済み</span>
+                    <button class="btn btn-sm btn-outline-danger" @click="deleteExcel(catKey)">削除</button>
+                </div>
+                <a :href="entry[catKey].excel_url" target="_blank" class="d-block mt-1 small">確認する</a>
+            </div>
+            <div v-else>
+                <input type="file" class="form-control w-75 mx-auto" accept=".xlsx, .xls" @change="uploadExcel($event, catKey)">
+                <div v-if="isUploading" class="spinner-border spinner-border-sm mt-2 text-primary"></div>
+            </div>
+        </div>
+      
+<div v-if="catKey !== 'training'" class="count-input-group mb-4">
                                             <h6 class="border-bottom pb-2 mb-3">参加・登録数 入力</h6>
                                             <div class="row g-3">
                                                 <div v-if="catKey === 'reg_fee'" class="row g-3">
@@ -3092,6 +3123,34 @@
                     if (!confirm("画像を削除しますか？")) return;
                     this.entry[category].receipt_url = '';
                     this.saveData(true); // サイレント保存
+                },
+
+uploadSpecificExcel(event, category, fieldName) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    this.isUploading = true;
+                    
+                    const path = `excel/${this.form.univ_id}/${category}_${fieldName}_${Date.now()}_${file.name}`;
+                    firebase.storage().ref().child(path).put(file)
+                        .then(s => s.ref.getDownloadURL())
+                        .then(url => {
+                            this.entry[category][fieldName] = url;
+                            this.entry[category].excel_url = this.entry[category].excel_url_beginner || this.entry[category].excel_url_mix;
+                            
+                            this.saveData(true);
+                            this.isUploading = false;
+                            alert("ファイルをアップロードしました");
+                        })
+                        .catch(e => {
+                            alert("アップロード失敗: " + e.message);
+                            this.isUploading = false;
+                        });
+                },
+                deleteSpecificExcel(category, fieldName) {
+                    if (!confirm("このファイルを削除しますか？")) return;
+                    this.entry[category][fieldName] = '';
+                    this.entry[category].excel_url = this.entry[category].excel_url_beginner || this.entry[category].excel_url_mix;
+                    this.saveData(true);
                 },
 
                 uploadNewsFile(event) {
