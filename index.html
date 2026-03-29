@@ -1254,47 +1254,51 @@
                                     style="cursor: help; text-decoration: underline dotted;">{{
                                     formatMoney(rec.total_cost) }}</td>
 
-                                <td v-for="key in adminStatusKeys" :key="key"
-                                    style="min-width: 90px; vertical-align: top;">
-                                    <div class="mb-1">
-                                        <div v-if="rec[key].hasExcel">
-                                            <span class="badge bg-success w-100 py-1" style="font-size: 0.7rem;">
-                                                <i class="bi bi-file-earmark-check"></i> 申込有
-                                            </span>
-                                        </div>
-                                        <div v-else>
-                                            <span class="badge bg-light text-muted border w-100 py-1"
-                                                style="font-size: 0.7rem;">
-                                                未提出
-                                            </span>
-                                        </div>
-                                    </div>
+                                <td v-for="key in adminStatusKeys" :key="key" style="min-width: 90px; vertical-align: top;">
+    <div class="mb-1">
+        <div v-if="rec[key].hasExcel">
+            <span class="badge bg-success w-100 py-1" style="font-size: 0.7rem;">
+                <i class="bi bi-file-earmark-check"></i> 申込有
+            </span>
+        </div>
+        <div v-else>
+            <span class="badge bg-light text-muted border w-100 py-1" style="font-size: 0.7rem;">未提出</span>
+        </div>
+    </div>
 
-                                    <div class="mb-1">
-                                        <div v-if="rec[key].hasReceipt">
-                                            <button class="btn btn-primary btn-sm w-100 py-0" style="font-size: 0.7rem;"
-                                                @click="showReceipt(rec, key)">
-                                                <i class="bi bi-image"></i> 振込済
-                                            </button>
-                                        </div>
-                                        <div v-else>
-                                            <span class="badge bg-light text-muted border w-100 py-1"
-                                                style="font-size: 0.7rem;">
-                                                未振込
-                                            </span>
-                                        </div>
-                                    </div>
+    <div class="mb-1">
+        <div v-if="rec[key].hasReceipt">
+            <button class="btn btn-primary btn-sm w-100 py-0" style="font-size: 0.7rem;" @click="showReceipt(rec, key)">
+                <i class="bi bi-image"></i> 振込済
+            </button>
+        </div>
+        <div v-else>
+            <span class="badge bg-light text-muted border w-100 py-1" style="font-size: 0.7rem;">未振込</span>
+        </div>
+    </div>
 
-                                    <div class="text-center mt-1" style="line-height: 1.2;">
-                                        <div class="small text-muted mb-1" style="font-size: 0.65rem;">ID: {{
-                                            rec[key].paymentId }}</div>
-                                        <a v-if="rec[key].excelUrl" :href="rec[key].excelUrl" target="_blank"
-                                            class="btn btn-sm btn-outline-success py-0 w-100"
-                                            style="font-size: 0.65rem;">
-                                            Excel DL
-                                        </a>
-                                    </div>
-                                </td>
+    <div class="text-center mt-1" style="line-height: 1.2;">
+        <div class="small text-muted mb-1" style="font-size: 0.65rem;">ID: {{ rec[key].paymentId }}</div>
+
+        <template v-if="key === 'class_tourney'">
+            <a v-if="rec[key].rawObj.excel_url_beginner" :href="rec[key].rawObj.excel_url_beginner" target="_blank"
+                class="btn btn-sm btn-outline-success py-0 w-100 mb-1" style="font-size: 0.6rem;">
+                ビギナーDL
+            </a>
+            <a v-if="rec[key].rawObj.excel_url_mix" :href="rec[key].rawObj.excel_url_mix" target="_blank"
+                class="btn btn-sm btn-outline-primary py-0 w-100" style="font-size: 0.6rem;">
+                ミックスDL
+            </a>
+        </template>
+
+        <template v-else>
+            <a v-if="rec[key].excelUrl" :href="rec[key].excelUrl" target="_blank"
+                class="btn btn-sm btn-outline-success py-0 w-100" style="font-size: 0.65rem;">
+                Excel DL
+            </a>
+        </template>
+    </div>
+</td>
 
                                 <td style="max-width: 200px;">
                                     <div class="text-truncate small" :title="rec.memo">{{ rec.memo }}</div>
@@ -2768,76 +2772,89 @@
             },
 
             created() {
-                this.isLoading = true;
-                const url = GAS_API_URL + "?t=" + new Date().getTime();
-                fetch(url).then(r => r.json()).then(d => {
-                    // d.master や d.records が無い場合は空配列を入れる ( || [] を追加 )
-                    this.masterData = d.master || [];
-                    this.savedRecords = d.records || [];
-                    this.newsList = d.news || [];
-                    this.isLoading = false;
+    this.isLoading = true;
+    const url = GAS_API_URL + "?t=" + new Date().getTime();
 
-                    db.collection('config').doc('tournaments').onSnapshot(doc => {
-                        if (doc.exists) {
-                            this.deadlines = doc.data() || {};
-                        }
-                    });
+    // 1. GASからマスタデータと登録済みレコードを取得
+    fetch(url).then(r => r.json()).then(d => {
+        this.masterData = d.master || [];
+        this.savedRecords = d.records || [];
+        this.newsList = d.news || [];
+        this.isLoading = false;
 
-                    if (this.user) {
-                        this.initUserData(this.user.email);
+        // 期限設定のリアルタイム取得
+        db.collection('config').doc('tournaments').onSnapshot(doc => {
+            if (doc.exists) {
+                this.deadlines = doc.data() || {};
+            }
+        });
+
+        // データ取得完了後に、もし既にログイン済みであれば初期化を実行
+        if (this.user) {
+            this.initUserData(this.user.email);
+            if (this.isAdmin) {
+                this.startAdminUnreadListeners();
+            } else if (this.form.univ_id) {
+                this.startUserUnreadListener(this.form.univ_id);
+            }
+        }
+    }).catch(e => { 
+        console.error(e); 
+        this.isLoading = false; 
+    });
+
+    // 2. Firebaseのログイン状態を監視 (fetchの外に出す)
+    firebase.auth().onAuthStateChanged(u => {
+        this.user = u;
+        if (u) {
+            // 管理者かどうかの判定（メールアドレス等で判定）
+            this.isAdmin = (u.email === ADMIN_ID || u.isAnonymous); 
+
+            // データの読み込みが完了（savedRecordsがある）している場合のみ初期化
+            if (this.savedRecords && this.savedRecords.length > 0) {
+                this.initUserData(u.email);
+                if (this.isAdmin) {
+                    this.startAdminUnreadListeners();
+                } else if (this.form.univ_id) {
+                    this.startUserUnreadListener(this.form.univ_id);
+                }
+            }
+
+            // 募集リストのリアルタイム取得
+            db.collection('recruits').orderBy('timestamp', 'desc').onSnapshot(snap => {
+                this.recruitList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            });
+
+            // メッセージ履歴（自分を含むチャットルーム）
+            db.collection('direct_chats').onSnapshot(snap => {
+                const list = [];
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.participants && data.participants.includes(this.form.univ_id)) {
+                        const partnerId = data.participants.find(p => p !== this.form.univ_id) || '自分';
+                        list.push({
+                            roomId: doc.id,
+                            partnerId: partnerId,
+                            partnerName: partnerId, 
+                            lastMessage: data.lastMessage,
+                            lastDate: data.lastDate
+                        });
                     }
+                });
+                list.sort((a, b) => (b.lastDate?.seconds || 0) - (a.lastDate?.seconds || 0));
+                this.chatHistoryList = list;
+            });
+        }
+    });
 
+    // 3. 管理者用の予備的な監視開始（2秒後）
+    setTimeout(() => {
+        if (this.isAdmin && this.savedRecords.length > 0) {
+            this.startAdminUnreadListeners();
+        }
+    }, 2000);
+},
 
-                    firebase.auth().onAuthStateChanged(u => {
-                        this.user = u;
-                        if (u) {
-                            this.initUserData(u.email);
-
-                            // 募集リストのリアルタイム取得
-                            db.collection('recruits').orderBy('timestamp', 'desc').onSnapshot(snap => {
-                                this.recruitList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                            });
-
-                            // メッセージ履歴（自分を含むチャットルーム）を取得する簡易的な処理
-                            // ※本来はFirestoreの複合インデックスが必要になる場合があります
-                            db.collection('direct_chats').onSnapshot(snap => {
-                                const list = [];
-                                snap.forEach(doc => {
-                                    const data = doc.data();
-                                    if (data.participants && data.participants.includes(this.form.univ_id)) {
-                                        // 相手の名前を探す
-                                        const partnerId = data.participants.find(p => p !== this.form.univ_id) || '自分';
-                                        // ※本来はIDから名前マスタを引くべきですが、簡易的にIDまたは保存名を使用
-                                        list.push({
-                                            roomId: doc.id,
-                                            partnerId: partnerId,
-                                            partnerName: partnerId, // 必要に応じて名前解決ロジックを追加
-                                            lastMessage: data.lastMessage,
-                                            lastDate: data.lastDate
-                                        });
-                                    }
-                                });
-                                // 日付順にソート
-                                list.sort((a, b) => (b.lastDate?.seconds || 0) - (a.lastDate?.seconds || 0));
-                                this.chatHistoryList = list;
-                            });
-
-                            // ユーザー用の未読監視を開始
-                            if (!this.isAdmin && this.form.univ_id) {
-                                this.startUserUnreadListener(this.form.univ_id);
-                            }
-                        }
-                    });
-
-                    // 管理者用の未読監視を開始
-                    setTimeout(() => {
-                        if (this.isAdmin || (this.user && this.user.email === ADMIN_ID)) {
-                            this.startAdminUnreadListeners();
-                        }
-                    }, 2000);
-
-                }).catch(e => { console.error(e); this.isLoading = false; });
-            },
             methods: {
                 // ▼▼▼ 追加: 期限関連のメソッド ▼▼▼
                 saveDeadlines() {
@@ -3010,12 +3027,15 @@
                 },
 
                 startAdminUnreadListeners() {
-                    if (!this.savedRecords) return;
-                    this.savedRecords.forEach(rec => {
-                        const strUnivId = String(rec.univ_id);
-                        db.collection('chats').doc(strUnivId).collection('messages')
-                            .orderBy('timestamp', 'desc').limit(1)
-                            .onSnapshot(snapshot => {
+    if (!this.savedRecords || this.savedRecords.length === 0) return; // レコードがないなら何もしない
+    
+    this.savedRecords.forEach(rec => {
+        const strUnivId = String(rec.univ_id || "").trim(); // undefined対策
+        if (!strUnivId) return; // ★ IDが空ならスキップ（これがエラーの直接原因を回避します）
+
+        db.collection('chats').doc(strUnivId).collection('messages')
+            .orderBy('timestamp', 'desc').limit(1)
+            .onSnapshot(snapshot => {
                                 let isUnread = false;
                                 if (!snapshot.empty) {
                                     const doc = snapshot.docs[0];
@@ -3246,24 +3266,27 @@ uploadSpecificExcel(event, category, fieldName) {
 
 
                 login() {
-                    // 管理者ログインの場合
-                    if (this.authEmail === ADMIN_ID && this.authPass === ADMIN_PASS) {
-                        // 管理者も「ブラウザを閉じたらログアウト」にする設定を追加
-                        firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
-                            .then(() => {
-                                return firebase.auth().signInAnonymously();
-                            })
-                            .then(() => {
-                                this.isAdmin = true;
-                                this.authEmail = '';
-                                this.authPass = '';
-                                this.startAdminUnreadListeners();
-                            })
-                            .catch((e) => {
-                                alert("管理者ログインエラー: " + e.message);
-                            });
-                        return;
-                    }
+    // 管理者ログインの場合
+    if (this.authEmail === ADMIN_ID && this.authPass === ADMIN_PASS) {
+        firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
+            .then(() => {
+                return firebase.auth().signInAnonymously();
+            })
+            .then(() => {
+                this.isAdmin = true;
+                this.authEmail = '';
+                this.authPass = '';
+
+                // ★ 修正ポイント: savedRecordsが存在し、中身があるときだけ実行する
+                if (this.savedRecords && this.savedRecords.length > 0) {
+                    this.startAdminUnreadListeners();
+                }
+            })
+            .catch((e) => {
+                alert("管理者ログインエラー: " + e.message);
+            });
+        return;
+    }
 
                     // 一般ユーザーログインの場合
                     // ▼▼▼ ここで「SESSION（セッション）」モードに設定します ▼▼▼
@@ -3344,13 +3367,14 @@ uploadSpecificExcel(event, category, fieldName) {
 
                         // --- 判定ロジックの変更 ---
                         result[key] = {
-                            hasExcel: !!rawObj.excel_url,     // Excelファイルがあるか
-                            hasReceipt: !!rawObj.receipt_url, // 振込明細画像があるか
-                            receiptUrl: rawObj.receipt_url,
-                            excelUrl: rawObj.excel_url,
-                            paymentId: rawObj.payment_id,
-                            rawObj: rawObj
-                        };
+    // excel_url か excel_url_beginner か excel_url_mix のどれかがあれば true
+    hasExcel: !!(rawObj.excel_url || rawObj.excel_url_beginner || rawObj.excel_url_mix),
+    hasReceipt: !!rawObj.receipt_url,
+    receiptUrl: rawObj.receipt_url,
+    excelUrl: rawObj.excel_url, // 互換性のため残す
+    paymentId: rawObj.payment_id,
+    rawObj: rawObj
+};
 
                         const detailStr = this.generateDetailString(key, rawObj);
                         if (detailStr !== "0" && detailStr !== "-") {
@@ -3376,12 +3400,73 @@ uploadSpecificExcel(event, category, fieldName) {
                     this.filteredAdminRecords.forEach(r => { const raw = r[key].rawObj; if (!raw) return; const detail = this.generateDetailString(key, raw).replace(/,/g, ' '); csv += `${r.univ_id},${r.univ_name},${detail},${raw.excel_url || ''},${raw.payment_id || ''},${raw.confirmed ? 1 : 0}\n`; });
                     saveAs(new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: "text/csv" }), `kanagawa_${key}_list.csv`);
                 },
-                async downloadTournamentZip() {
-                    const key = this.selectedTournament; const zip = new JSZip(); let count = 0; this.isZipping = true;
-                    const targets = this.filteredAdminRecords.filter(r => r[key].rawObj && r[key].rawObj.excel_url).map(r => ({ name: `${r.univ_name}_${this.getCategoryName(key)}.xlsx`, url: r[key].rawObj.excel_url }));
-                    if (targets.length === 0) { alert("対象のExcelファイルがありません。"); this.isZipping = false; return; }
-                    try { await Promise.all(targets.map(async (target) => { try { const response = await fetch(target.url); if (!response.ok) throw new Error("Network error"); const blob = await response.blob(); zip.file(target.name, blob); count++; } catch (err) { console.error(`Failed to load ${target.name}`, err); } })); if (count === 0) alert("ファイルのダウンロードに失敗しました。"); else saveAs(await zip.generateAsync({ type: "blob" }), `${this.getCategoryName(key)}_All_Excel.zip`); } catch (e) { console.error(e); alert("ZIP作成中にエラーが発生しました。"); } finally { this.isZipping = false; }
-                },
+async downloadTournamentZip() {
+    const key = this.selectedTournament;
+    const zip = new JSZip();
+    let count = 0;
+    this.isZipping = true;
+    
+    const targets = [];
+    this.filteredAdminRecords.forEach(r => {
+        const raw = r[key].rawObj;
+        if (!raw) return;
+
+        const safeUnivName = (r.univ_name || "Unknown").replace(/[\\/:*?"<>|]/g, "_");
+
+        if (key === 'class_tourney') {
+            if (raw.excel_url_beginner) targets.push({ name: `${safeUnivName}_ビギナーズ`, url: raw.excel_url_beginner });
+            if (raw.excel_url_mix) targets.push({ name: `${safeUnivName}_ミックス複`, url: raw.excel_url_mix });
+        } else if (raw.excel_url) {
+            targets.push({ name: `${safeUnivName}_${this.getCategoryName(key)}`, url: raw.excel_url });
+        }
+    });
+
+    try {
+        await Promise.all(targets.map(async (target) => {
+            try {
+                const response = await fetch(target.url);
+                if (!response.ok) throw new Error("Network error");
+                
+                const buffer = await response.arrayBuffer();
+                const view = new Uint8Array(buffer);
+
+                // --- 拡張子の自動判別ロジック ---
+                let extension = ".xlsx"; // デフォルト
+                
+                if (view[0] === 0xD0 && view[1] === 0xCF && view[2] === 0x11 && view[3] === 0xE0) {
+                    // 先頭が ﾐﾏ爍ｱ (D0 CF 11 E0) なら旧Excel形式
+                    extension = ".xls";
+                } else if (view[0] === 0x50 && view[1] === 0x4B) {
+                    // 先頭が PK (50 4B) なら新Excel形式(Zip形式)
+                    extension = ".xlsx";
+                }
+                
+                // 判別した拡張子を付けてZIPに追加
+                zip.file(target.name + extension, buffer, { binary: true }); 
+                count++;
+            } catch (err) {
+                console.error(`取得失敗: ${target.name}`, err);
+            }
+        }));
+
+        if (count === 0) {
+            alert("有効なファイルが取得できませんでした。");
+        } else {
+            const blob = await zip.generateAsync({
+                type: "blob",
+                compression: "DEFLATE",
+                compressionOptions: { level: 6 }
+            });
+            saveAs(blob, `${this.getCategoryName(key)}_一括ダウンロード.zip`);
+        }
+    } catch (e) {
+        console.error(e);
+        alert("ZIP作成中にエラーが発生しました。");
+    } finally {
+        this.isZipping = false;
+    }
+},
+
                 toggleApproval(isApprove) {
                     const rec = this.modal.targetRecord; const cat = this.modal.category; if (!confirm(isApprove ? "「振込済み」として承認しますか？" : "承認を取り消しますか？")) return;
                     rec[cat].confirmed = isApprove; rec[cat].rawObj.confirmed = isApprove;
