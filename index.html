@@ -18,6 +18,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
         /* 基本スタイル */
         body {
@@ -991,6 +992,9 @@
                                     <button class="btn btn-outline-dark" @click="downloadTournamentCSV">
                                         <i class="bi bi-file-text"></i> この大会のCSV出力
                                     </button>
+<button class="btn btn-outline-primary" @click="downloadTrainingParticipantList" v-if="selectedTournament === 'training'">
+            <i class="bi bi-person-lines-fill"></i> ②講習会 名簿CSV抽出
+        </button>
                                 </div>
                                 <div v-if="isZipping" class="text-success small mt-1">
                                     <div class="spinner-border spinner-border-sm" role="status"></div> ファイルを収集中...
@@ -3726,8 +3730,92 @@ async downloadTournamentZip() {
 
                 printAllCards() {
                     window.print();
-                }
+                },
 
+async downloadTrainingParticipantList() {
+    const key = 'training';
+    const targets = this.filteredAdminRecords.filter(r => r[key].hasExcel);
+    
+    if (targets.length === 0) return alert("申込ファイルがあるチームがありません。");
+    if (!confirm(`提出済みの ${targets.length} チームのファイルから名簿を抽出します。よろしいですか？`)) return;
+
+    this.isZipping = true;
+    let allParticipants = [["所属チーム", "区分", "氏名", "ふりがな", "学年/会員番号", "性別"]]; 
+
+    try {
+        for (const rec of targets) {
+            const url = rec[key].rawObj.excel_url;
+            const res = await fetch(url);
+            const arrayBuffer = await res.arrayBuffer();
+            const data = new Uint8Array(arrayBuffer);
+            const workbook = XLSX.read(data, { type: 'array' });
+
+            const extractFromSheet = (sheetName, typeLabel) => {
+                const sheet = workbook.Sheets[sheetName];
+                if (!sheet) return; 
+
+                const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                const dataRows = jsonData.slice(7); // 8行目以降
+
+                dataRows.forEach((row) => {
+                    if (!row || row.length < 2) return;
+
+                    let name = "";
+                    let furigana = "";
+                    let info = "";
+                    let gender = "";
+
+                    // --- 列の特定ロジック ---
+                    // B列にNo(数字)がある前提で、行の中から「最初の数値」を探し、その右隣を氏名とする
+                    const noIndex = row.findIndex(cell => cell !== null && cell !== "" && !isNaN(cell));
+                    
+                    if (noIndex !== -1 && row[noIndex + 1]) {
+                        // 数値(No)が見つかった場合、その次の列を氏名とする
+                        name     = row[noIndex + 1]; // C列相当
+                        furigana = row[noIndex + 2]; // D列相当
+                        info     = row[noIndex + 3]; // E列相当
+                        gender   = row[noIndex + 4]; // F列相当
+                    } else {
+                        // 数値で見つからない場合の予備（固定でIndex 2を見る）
+                        name     = row[2];
+                        furigana = row[3];
+                        info     = row[4];
+                        gender   = row[5];
+                    }
+
+                    // 名前が取得できており、かつ見出し（氏名）という文字でない場合のみ保存
+                    if (name && String(name).trim() !== "" && !String(name).includes("氏名")) {
+                        allParticipants.push([
+                            rec.univ_name,
+                            typeLabel,
+                            String(name).trim(),
+                            String(furigana || "").trim(),
+                            String(info || "").trim(),
+                            String(gender || "").trim()
+                        ]);
+                    }
+                });
+            };
+
+            extractFromSheet("ジュニア", "ジュニア");
+            extractFromSheet("指導者講習会", "指導者");
+        }
+
+        // CSV作成
+        const csvContent = allParticipants.map(row => 
+            row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+        ).join("\n");
+
+        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv" });
+        saveAs(blob, `講習会参加者名簿_${new Date().toLocaleDateString()}.csv`);
+
+    } catch (e) {
+        console.error(e);
+        alert("抽出中にエラーが発生しました。");
+    } finally {
+        this.isZipping = false;
+    }
+}
             }
         }).mount('#app');
     </script>
