@@ -1705,7 +1705,7 @@
                                                     </div>
                                                 </div>
                                                 <div v-if="catKey === 'abc'" class="row g-3">
-                                                    <div class="col-md-6"><label>シングルス (¥2,000)</label>
+                                                    <div class="col-md-6"><label>シングルス (¥2,500)</label>
                                                         <div class="input-group"><input type="number"
                                                                 v-model.number="entry.abc.count_single"
                                                                 class="form-control" min="0"><span
@@ -2945,7 +2945,7 @@
                         case 'training': return 0; // 金額を常に 0 に修正
                         case 'class_tourney': return (e.count_beginner || 0) * 2000 + (e.count_mix || 0) * 4000;
                         case 'wakaba': return (e.count_team || 0) * 15000;
-                        case 'abc': return (e.count_single || 0) * 2000;
+                        case 'abc': return (e.count_single || 0) * 2500;
                         case 'umpire': return (e.count_person || 0) * 1000;
                         case 'chairman': return (e.count_double || 0) * 4000;
                         case 'kanto': return (e.count_single || 0) * 2500 + (e.count_double || 0) * 5000;
