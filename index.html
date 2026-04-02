@@ -1295,6 +1295,17 @@
             </a>
         </template>
 
+<template v-else-if="key === 'wakaba'">
+    <a v-if="rec[key].rawObj.excel_url_1" :href="rec[key].rawObj.excel_url_1" target="_blank"
+        class="btn btn-sm btn-outline-success py-0 w-100 mb-1" style="font-size: 0.6rem;">
+        1部DL
+    </a>
+    <a v-if="rec[key].rawObj.excel_url_2" :href="rec[key].rawObj.excel_url_2" target="_blank"
+        class="btn btn-sm btn-outline-primary py-0 w-100" style="font-size: 0.6rem;">
+        2部DL
+    </a>
+</template>
+
         <template v-else>
             <a v-if="rec[key].excelUrl" :href="rec[key].excelUrl" target="_blank"
                 class="btn btn-sm btn-outline-success py-0 w-100" style="font-size: 0.65rem;">
@@ -1647,6 +1658,45 @@
     </div>
 </div>
 
+<div v-else-if="catKey === 'wakaba'" class="mb-4">
+    <div class="row g-2">
+        <div class="col-md-6">
+            <div class="excel-upload-area" style="background-color: #f8f9fa; border-style: solid; padding: 15px;">
+                <label class="form-label fw-bold text-secondary small">【1部提出用】申込ファイル</label>
+                <div v-if="entry.wakaba.excel_url_1">
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <span class="badge bg-success">アップロード済み</span>
+                        <button class="btn btn-sm btn-outline-danger" @click="deleteSpecificExcel('wakaba', 'excel_url_1')">削除</button>
+                    </div>
+                    <a :href="entry.wakaba.excel_url_1" target="_blank" class="d-block mt-2 small text-decoration-none">
+                        <i class="bi bi-eye"></i> 1部ファイルを確認
+                    </a>
+                </div>
+                <div v-else>
+                    <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'wakaba', 'excel_url_1')">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="excel-upload-area" style="background-color: #f8f9fa; border-style: solid; padding: 15px;">
+                <label class="form-label fw-bold text-primary small">【2部提出用】申込ファイル</label>
+                <div v-if="entry.wakaba.excel_url_2">
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <span class="badge bg-primary">アップロード済み</span>
+                        <button class="btn btn-sm btn-outline-danger" @click="deleteSpecificExcel('wakaba', 'excel_url_2')">削除</button>
+                    </div>
+                    <a :href="entry.wakaba.excel_url_2" target="_blank" class="d-block mt-2 small text-decoration-none">
+                        <i class="bi bi-eye"></i> 2部ファイルを確認
+                    </a>
+                </div>
+                <div v-else>
+                    <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'wakaba', 'excel_url_2')">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
         <div v-else class="excel-upload-area">
             <label class="form-label fw-bold">申込ファイル(Excel)のアップロード</label>
             <div v-if="entry[catKey].excel_url" class="mt-3">
@@ -1701,13 +1751,25 @@
                                                     </div>
                                                 </div>
                                                 <div v-if="catKey === 'wakaba'" class="row g-3">
-                                                    <div class="col-md-6"><label>参加チーム (¥15,000)</label>
-                                                        <div class="input-group"><input type="number"
-                                                                v-model.number="entry.wakaba.count_team"
-                                                                class="form-control" min="0"><span
-                                                                class="input-group-text">チーム</span></div>
-                                                    </div>
-                                                </div>
+    <div class="col-md-6">
+        <label class="fw-bold text-secondary">1部 参加チーム (¥15,000)</label>
+        <div class="input-group">
+            <input type="number"
+                v-model.number="entry.wakaba.count_1"
+                class="form-control" min="0">
+            <span class="input-group-text">チーム</span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <label class="fw-bold text-primary">2部 参加チーム (¥15,000)</label>
+        <div class="input-group">
+            <input type="number"
+                v-model.number="entry.wakaba.count_2"
+                class="form-control" min="0">
+            <span class="input-group-text">チーム</span>
+        </div>
+    </div>
+</div>
                                                 <div v-if="catKey === 'abc'" class="row g-3">
                                                     <div class="col-md-6"><label>シングルス (¥2,500)</label>
                                                         <div class="input-group"><input type="number"
@@ -2637,7 +2699,16 @@
                         reg_fee: { excel_url: '', count_player: 0, count_coach: 0, payment_id: '', receipt_url: '' },
                         training: { excel_url: '', count_general: 0, count_member: 0, count_student: 0, payment_id: '', receipt_url: '' },
                         class_tourney: { excel_url: '', count_beginner: 0, count_challenge: 0, count_mix: 0, payment_id: '', receipt_url: '' },
-                        wakaba: { excel_url: '', count_team: 0, payment_id: '', receipt_url: '' },
+                        wakaba: { 
+    excel_url: '', 
+    excel_url_1: '', // 追加
+    excel_url_2: '', // 追加
+    count_1: 0,      // 追加
+    count_2: 0,      // 追加
+    count_team: 0,   // 互換性のために残してもOK
+    payment_id: '', 
+    receipt_url: '' 
+},
                         abc: { excel_url: '', count_single: 0, payment_id: '', receipt_url: '' },
                         umpire: { excel_url: '', count_person: 0, payment_id: '', receipt_url: '' },
                         chairman: { excel_url: '', count_double: 0, payment_id: '', receipt_url: '' },
@@ -2948,7 +3019,7 @@
                         case 'reg_fee': return (e.count_player || 0) * 1500 + (e.count_coach || 0) * 1500;
                         case 'training': return 0; // 金額を常に 0 に修正
                         case 'class_tourney': return (e.count_beginner || 0) * 2000 + (e.count_mix || 0) * 4000;
-                        case 'wakaba': return (e.count_team || 0) * 15000;
+                        case 'wakaba': return ((e.count_1 || 0) + (e.count_2 || 0)) * 15000;
                         case 'abc': return (e.count_single || 0) * 2500;
                         case 'umpire': return (e.count_person || 0) * 1000;
                         case 'chairman': return (e.count_double || 0) * 4000;
@@ -2981,7 +3052,10 @@
                         case 'reg_fee': if (e.count_player) parts.push(`選手:${e.count_player}`); if (e.count_coach) parts.push(`指導者:${e.count_coach}`); break;
                         case 'training': parts.push("申込書提出のみ"); break;
                         case 'class_tourney': if (e.count_beginner) parts.push(`ビギナー:${e.count_beginner}`); if (e.count_mix) parts.push(`Mix:${e.count_mix}`); break;
-                        case 'wakaba': if (e.count_team) parts.push(`${e.count_team}チーム`); break;
+                        case 'wakaba': 
+    if (e.count_1) parts.push(`1部:${e.count_1}ﾁｰﾑ`);
+    if (e.count_2) parts.push(`2部:${e.count_2}ﾁｰﾑ`);
+    break;
                         case 'abc': if (e.count_single) parts.push(`${e.count_single}名`); break;
                         case 'umpire': if (e.count_person) parts.push(`${e.count_person}名`); break;
                         case 'chairman': if (e.count_double) parts.push(`${e.count_double}組`); break;
@@ -3150,26 +3224,35 @@
                 },
 
 uploadSpecificExcel(event, category, fieldName) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-                    this.isUploading = true;
-                    
-                    const path = `excel/${this.form.univ_id}/${category}_${fieldName}_${Date.now()}_${file.name}`;
-                    firebase.storage().ref().child(path).put(file)
-                        .then(s => s.ref.getDownloadURL())
-                        .then(url => {
-                            this.entry[category][fieldName] = url;
-                            this.entry[category].excel_url = this.entry[category].excel_url_beginner || this.entry[category].excel_url_mix;
-                            
-                            this.saveData(true);
-                            this.isUploading = false;
-                            alert("ファイルをアップロードしました");
-                        })
-                        .catch(e => {
-                            alert("アップロード失敗: " + e.message);
-                            this.isUploading = false;
-                        });
-                },
+    const file = event.target.files[0];
+    if (!file) return;
+    this.isUploading = true;
+    
+    const path = `excel/${this.form.univ_id}/${category}_${fieldName}_${Date.now()}_${file.name}`;
+    firebase.storage().ref().child(path).put(file)
+        .then(s => s.ref.getDownloadURL())
+        .then(url => {
+            this.entry[category][fieldName] = url;
+            
+            // ★【ここを追加】 若葉カップまたはミックス＆ビギナーの場合、
+            // どちらか1つでもファイルがあれば、共通の excel_url にも値を入れておく
+            // これにより、管理者画面の「申込有」バッジが確実に点灯します。
+            if (category === 'wakaba') {
+                this.entry[category].excel_url = this.entry[category].excel_url_1 || this.entry[category].excel_url_2;
+            } else if (category === 'class_tourney') {
+                this.entry[category].excel_url = this.entry[category].excel_url_beginner || this.entry[category].excel_url_mix;
+            }
+            
+            this.saveData(true);
+            this.isUploading = false;
+            alert("ファイルをアップロードしました");
+        })
+        .catch(e => {
+            alert("アップロード失敗: " + e.message);
+            this.isUploading = false;
+        });
+},
+
                 deleteSpecificExcel(category, fieldName) {
                     if (!confirm("このファイルを削除しますか？")) return;
                     this.entry[category][fieldName] = '';
@@ -3371,11 +3454,11 @@ uploadSpecificExcel(event, category, fieldName) {
 
                         // --- 判定ロジックの変更 ---
                         result[key] = {
-    // excel_url か excel_url_beginner か excel_url_mix のどれかがあれば true
-    hasExcel: !!(rawObj.excel_url || rawObj.excel_url_beginner || rawObj.excel_url_mix),
+    // excel_url または excel_url_1, 2 いずれかがあれば true
+    hasExcel: !!(rawObj.excel_url || rawObj.excel_url_beginner || rawObj.excel_url_mix || rawObj.excel_url_1 || rawObj.excel_url_2),
     hasReceipt: !!rawObj.receipt_url,
     receiptUrl: rawObj.receipt_url,
-    excelUrl: rawObj.excel_url, // 互換性のため残す
+    excelUrl: rawObj.excel_url, 
     paymentId: rawObj.payment_id,
     rawObj: rawObj
 };
@@ -3420,7 +3503,19 @@ async downloadTournamentZip() {
         if (key === 'class_tourney') {
             if (raw.excel_url_beginner) targets.push({ name: `${safeUnivName}_ビギナーズ`, url: raw.excel_url_beginner });
             if (raw.excel_url_mix) targets.push({ name: `${safeUnivName}_ミックス複`, url: raw.excel_url_mix });
-        } else if (raw.excel_url) {
+        } 
+        // ▼▼▼ 若葉カップ用の処理を追加 ▼▼▼
+        else if (key === 'wakaba') {
+            if (raw.excel_url_1) targets.push({ name: `${safeUnivName}_若葉1部`, url: raw.excel_url_1 });
+            if (raw.excel_url_2) targets.push({ name: `${safeUnivName}_若葉2部`, url: raw.excel_url_2 });
+            
+            // 以前の形式（1つだけアップロード）でデータが残っている場合のための互換性処理
+            if (!raw.excel_url_1 && !raw.excel_url_2 && raw.excel_url) {
+                targets.push({ name: `${safeUnivName}_若葉`, url: raw.excel_url });
+            }
+        } 
+        // ▲▲▲ ここまで ▲▲▲
+        else if (raw.excel_url) {
             targets.push({ name: `${safeUnivName}_${this.getCategoryName(key)}`, url: raw.excel_url });
         }
     });
@@ -3435,17 +3530,14 @@ async downloadTournamentZip() {
                 const view = new Uint8Array(buffer);
 
                 // --- 拡張子の自動判別ロジック ---
-                let extension = ".xlsx"; // デフォルト
+                let extension = ".xlsx"; 
                 
                 if (view[0] === 0xD0 && view[1] === 0xCF && view[2] === 0x11 && view[3] === 0xE0) {
-                    // 先頭が ﾐﾏ爍ｱ (D0 CF 11 E0) なら旧Excel形式
                     extension = ".xls";
                 } else if (view[0] === 0x50 && view[1] === 0x4B) {
-                    // 先頭が PK (50 4B) なら新Excel形式(Zip形式)
                     extension = ".xlsx";
                 }
                 
-                // 判別した拡張子を付けてZIPに追加
                 zip.file(target.name + extension, buffer, { binary: true }); 
                 count++;
             } catch (err) {
@@ -3470,7 +3562,6 @@ async downloadTournamentZip() {
         this.isZipping = false;
     }
 },
-
                 toggleApproval(isApprove) {
                     const rec = this.modal.targetRecord; const cat = this.modal.category; if (!confirm(isApprove ? "「振込済み」として承認しますか？" : "承認を取り消しますか？")) return;
                     rec[cat].confirmed = isApprove; rec[cat].rawObj.confirmed = isApprove;
