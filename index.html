@@ -17,7 +17,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
         /* 基本スタイル */
@@ -511,12 +513,12 @@
 
         .hanko-box {
             position: absolute;
-            right: 0;
-            top: 0;
+            right: 20px; /* 右端から少し離して枠内に収める */
+            top: -30px;  /* 上にずらして連盟名の文字に少しかぶせる */
             width: 90px;
             height: 90px;
             opacity: 0.85;
-            transform: rotate(-2deg);
+            /* transform: rotate(-2deg); を削除して真っ直ぐにしました */
             user-select: none;
         }
 
@@ -541,12 +543,10 @@
         }
 
         .id-card {
-            width: 680px;
-            /* 横幅 */
-            height: 1000px;
-            /* 高さ（縦長大判サイズ） */
-
-            /* 背景グラデーション */
+            width: 600px;   /* 横幅（比率5）に変更 */
+            height: 900px; /* 高さ（比率10）に変更 */
+            
+            /* --- 以下の背景色などはそのまま残してください --- */
             background: linear-gradient(160deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%);
             color: white;
             font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", sans-serif;
@@ -554,13 +554,11 @@
             padding: 40px;
             box-sizing: border-box;
             border-radius: 0;
-            /* 印刷用なので角丸なし、または小さく */
             overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             text-align: center;
-            /* 基本センター揃え */
             border: 1px solid #ddd;
         }
 
@@ -592,11 +590,9 @@
 
         /* ★★★ 連盟名を大きく強調 ★★★ */
         .assoc-name {
-            font-size: 100px;
-            /* 46pxから大幅アップ */
+            font-size: 85px; /* 100pxから縮小 */
             font-weight: 900;
-            letter-spacing: 15px;
-            /* 文字間隔を広げてバランスを取る */
+            letter-spacing: 10px; /* 15pxから縮小 */
             line-height: 1.2;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
             width: 100%;
@@ -632,15 +628,15 @@
         }
 
         .coach-name {
-            font-size: 94px;
-            /* 名前を特大に */
+            font-size: 75px; 
             font-weight: bold;
             margin-bottom: 20px !important;
             line-height: 1.1;
             text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
             border-bottom: 2px solid rgba(255, 255, 255, 0.3);
             padding-bottom: 10px;
-            width: 90%;
+            width: 100%; 
+            white-space: nowrap; 
         }
 
         .meta-info {
@@ -688,23 +684,23 @@
 }
 
 .license-badges {
-    display: flex !important;
-    flex-direction: row !important;  /* 資格同士を横並びにする */
-    justify-content: center !important;
-    align-items: center !important;
-    gap: 25px; /* ボックス間の隙間 */
-    width: 100%;
-}
+            display: flex !important;
+            flex-direction: row !important; 
+            justify-content: center !important;
+            align-items: center !important;
+            gap: 15px; /* 25pxから縮小 */
+            width: 100%;
+        }
 
         .badge-license {
-    background: #ffffff !important;
-    color: #1976d2 !important; /* 文字色は青 */
-    font-size: 38px !important;
-    font-weight: bold !important;
-    padding: 10px 30px !important;
-    border-radius: 4px !important;
-    white-space: nowrap !important; /* 資格名が2行にならないように固定 */
-}
+            background: #ffffff !important;
+            color: #1976d2 !important; 
+            font-size: 28px !important; /* 38pxから縮小 */
+            font-weight: bold !important;
+            padding: 8px 15px !important; /* 左右の余白を縮小 */
+            border-radius: 4px !important;
+            white-space: nowrap !important; 
+        }
 
         .badge-coach, .badge-umpire {
     background: #0d47a1 !important;
@@ -772,8 +768,9 @@
 
     /* カード本体：外側の共通デザインを引き継ぎつつ、A4に収まるよう縮小 */
     .id-card-print-item .id-card {
-        transform: scale(0.6) !important; 
-        transform-origin: center center;
+        /* ▼ ここを 0.315 から 0.63 に変更 (横10cmに合わせる) ▼ */
+        transform: scale(0.63) !important; 
+        transform-origin: center top; /* 中央上に配置 */
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
@@ -783,7 +780,7 @@
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
-}
+ }
 
 
         /* テーブルのヘッダー固定：見出しの文字サイズも標準的にします */
@@ -890,6 +887,12 @@
         .badge.bg-danger {
             animation: pulse-red 2s infinite;
         }
+
+/* PDF生成時に要素が消えないようにするための設定 */
+#receipt-content {
+    background-color: white !important;
+    display: block !important;
+}
     </style>
 </head>
 
@@ -2035,13 +2038,15 @@
                                 </div>
 
                                 <div v-if="activeTab === 'settlement'">
-                                    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
-                                        <h4><i class="bi bi-file-earmark-spreadsheet-fill"></i> ⑫ 支払明細</h4><button
-                                            onclick="window.print()" class="btn btn-dark"><i class="bi bi-printer"></i>
-                                            印刷 / PDF保存</button>
-                                    </div>
-                                    <div class="report-container">
-                                        <h3 class="text-center mb-4">令和7年度 神奈川県小学生バドミントン連盟 支払明細</h3>
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <h4><i class="bi bi-file-earmark-spreadsheet-fill"></i> ⑫ 支払明細</h4>
+        <button @click="generateSettlementPDF" class="btn btn-dark">
+            <i class="bi bi-file-earmark-pdf"></i> PDFで保存する
+        </button>
+    </div>
+    
+    <div id="settlement-content" class="report-container">
+        <h3 class="text-center mb-4">令和8年度 神奈川県小学生バドミントン連盟 支払明細</h3>
                                         <div class="d-flex justify-content-between mb-3">
                                             <h5>クラブ名: <u>{{ form.univ_name }}</u></h5>
                                             <h5>日付: <u>{{ new Date().toLocaleDateString() }}</u></h5>
@@ -2517,12 +2522,12 @@
                         <button type="button" class="btn-close" @click="receiptData.show = false"></button>
                     </div>
                     <div class="modal-body bg-light p-4">
-                        <div class="receipt-layout mx-auto" style="max-width: 700px;">
+                        <div id="receipt-content" class="receipt-layout mx-auto" style="max-width: 700px;">
                             <div class="text-center"><span class="receipt-title">領　収　証</span></div>
                             <div class="d-flex justify-content-between align-items-end mt-4">
-                                <h4 class="mb-0"><u>{{ form.univ_name }} 様</u></h4>
-                                <div>発行日: {{ new Date().toLocaleDateString('ja-JP', {year:'numeric', month:'long',
-                                    day:'numeric'}) }}</div>
+    <h4 class="mb-0" style="border-bottom: 1.5px solid #000; padding-bottom: 4px;">{{ form.univ_name }} 様</h4>
+    <div>発行日: {{ new Date().toLocaleDateString('ja-JP', {year:'numeric', month:'long', day:'numeric'}) }}</div>
+
                             </div>
                             <div class="receipt-amount">{{ formatMoney(receiptData.amount) }}-</div>
                             <div class="text-center small text-muted">（消費税等を含む）</div>
@@ -2531,21 +2536,18 @@
                             </div>
                             <div class="issuer-info">
                                 <div class="hanko-box">
-                                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%"
-                                        height="100%">
-                                        <rect x="2" y="2" width="96" height="96" rx="2" ry="2" fill="none" stroke="#d00"
-                                            stroke-width="2" />
-                                        <rect x="6" y="6" width="88" height="88" rx="1" ry="1" fill="none" stroke="#d00"
-                                            stroke-width="1" />
-                                        <text x="50" y="25" font-family="'Hiragino Mincho ProN', 'MS Mincho', serif"
-                                            font-weight="bold" font-size="20" fill="#d00"
-                                            text-anchor="middle">神奈川県</text>
-                                        <text x="50" y="55" font-family="'Hiragino Mincho ProN', 'MS Mincho', serif"
-                                            font-weight="bold" font-size="20" fill="#d00"
-                                            text-anchor="middle">小学生</text>
-                                        <text x="50" y="85" font-family="'Hiragino Mincho ProN', 'MS Mincho', serif"
-                                            font-weight="bold" font-size="20" fill="#d00" text-anchor="middle">連盟</text>
-                                    </svg>
+                                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="90" height="90" style="width: 90px; height: 90px;">
+    <rect x="2" y="2" width="96" height="96" rx="2" ry="2" fill="none" stroke="#d00" stroke-width="2" />
+    <rect x="6" y="6" width="88" height="88" rx="1" ry="1" fill="none" stroke="#d00" stroke-width="1" />
+    
+    <text x="50" y="26" font-family="'Hiragino Mincho ProN', 'MS Mincho', serif" font-weight="bold" font-size="17" fill="#d00" text-anchor="middle">神奈川県</text>
+    
+    <text x="50" y="48" font-family="'Hiragino Mincho ProN', 'MS Mincho', serif" font-weight="bold" font-size="17" fill="#d00" text-anchor="middle">小学生</text>
+    
+    <text x="50" y="70" font-family="'Hiragino Mincho ProN', 'MS Mincho', serif" font-weight="bold" font-size="12" fill="#d00" text-anchor="middle">バドミントン</text>
+    
+    <text x="50" y="92" font-family="'Hiragino Mincho ProN', 'MS Mincho', serif" font-weight="bold" font-size="17" fill="#d00" text-anchor="middle">連盟</text>
+</svg>
                                 </div>
                                 <h5>神奈川県小学生バドミントン連盟</h5>
                             </div>
@@ -2553,8 +2555,9 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @click="receiptData.show = false">閉じる</button>
-                        <button type="button" class="btn btn-primary" onclick="window.print()"><i
-                                class="bi bi-printer"></i> 印刷 / PDF保存</button>
+                        <button type="button" class="btn btn-primary" @click="generatePDF">
+    <i class="bi bi-file-earmark-pdf"></i> PDFで保存する
+</button>
                     </div>
                 </div>
             </div>
@@ -3577,9 +3580,22 @@ async downloadTournamentZip() {
                     return fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json()).catch(e => { console.error(e); alert("保存エラーが発生しました"); });
                 },
                 openReceipt(category) {
-                    const amount = this.calculateCategoryTotal(category); if (amount === 0) { alert("支払金額が0円のため発行できません。"); return; }
-                    this.receiptData.amount = amount; this.receiptData.title = `令和7年度 ${this.categories[category].label} 参加費等`; this.receiptData.show = true;
-                },
+    const amount = this.calculateCategoryTotal(category);
+    if (amount === 0) { 
+        alert("支払金額が0円のため発行できません。"); 
+        return; 
+    }
+    this.receiptData.amount = amount;
+    
+    // ▼連盟登録（reg_fee）の時だけ「参加費等」ではなく「費」にする
+    if (category === 'reg_fee') {
+        this.receiptData.title = `令和8年度 ${this.categories[category].label}費`;
+    } else {
+        this.receiptData.title = `令和8年度 ${this.categories[category].label} 参加費等`;
+    }
+    
+    this.receiptData.show = true;
+},
                 addNews() { if (!this.adminNews.date || !this.adminNews.title) return alert("日付とタイトルは必須です"); this.newsList.unshift({ ...this.adminNews }); this.saveNews(); this.adminNews = { date: '', title: '', content: '', url: '' }; },
                 deleteNews(index) { if (!confirm("削除しますか？")) return; this.newsList.splice(index, 1); this.saveNews(); },
                 saveNews() { const payload = { action: 'update_news', news_list: this.newsList }; fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json()).then(() => alert("連絡事項を更新しました")).catch(e => alert("エラー: " + e.message)); },
@@ -3590,6 +3606,182 @@ async downloadTournamentZip() {
                     const payload = { action: 'send_email', to: rec.raw_data.email, body: body };
                     fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json()).then(d => { if (d.status === 'success') alert("送信しました"); else alert("送信失敗: " + d.message); }).catch(e => alert("通信エラー"));
                 },
+
+generatePDF() {
+    // 1. ライブラリが正しく読み込まれているかチェック
+    if (typeof html2pdf === 'undefined') {
+        alert("PDF作成システムが読み込まれていません。ページを再読み込みしてください。");
+        return;
+    }
+
+    const element = document.getElementById("receipt-content");
+    if (!element) {
+        alert("領収書のデータが見つかりません。");
+        return;
+    }
+
+    // 保存ファイル名（チーム名がない場合は代替テキスト）
+    const fileName = this.form.univ_name ? `領収書_${this.form.univ_name}.pdf` : '領収書.pdf';
+
+    const opt = {
+        margin: [10, 10, 10, 10],
+        filename: fileName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+            scale: 2, 
+            useCORS: true,
+            scrollY: 0,
+            // HTMLの中身を消さず、CSSの「Fixed(固定)」設定だけを安全に解除する
+            onclone: (clonedDoc) => {
+                const target = clonedDoc.getElementById("receipt-content");
+                if (target) {
+                    target.style.backgroundColor = "white"; // 背景を確実に白に
+                    
+                    // モーダルのせいで要素が画面外に飛ぶのを防ぐため、親要素の配置を通常(static)に戻す
+                    let parent = target.parentElement;
+                    while (parent && parent.tagName !== 'BODY') {
+                        parent.style.position = 'static';
+                        parent.style.transform = 'none';
+                        parent.style.overflow = 'visible';
+                        parent.style.margin = '0';
+                        parent.style.padding = '0';
+                        parent = parent.parentElement;
+                    }
+                    
+                    // モーダル背景の黒い半透明を透明にする
+                    const modal = clonedDoc.getElementById('receiptModal');
+                    if (modal) {
+                        modal.style.backgroundColor = 'transparent';
+                    }
+                }
+            }
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // 2. エラーを確実にキャッチして画面に表示させる
+    try {
+        html2pdf()
+            .set(opt)
+            .from(element)
+            .save()
+            .then(() => {
+                // 成功した場合はブラウザの保存機能が動くため何もしない
+                console.log("PDFの保存処理が完了しました。");
+            })
+            .catch(err => {
+                console.error("PDF生成中のエラー:", err);
+                alert("PDFの作成中にエラーが発生しました。\n原因: " + err.message);
+            });
+    } catch (err) {
+        console.error("予期せぬエラー:", err);
+        alert("システム起動時にエラーが発生しました。\n原因: " + err.message);
+    }
+},
+
+generateSettlementPDF() {
+        // 1. ライブラリのロードチェック
+        if (typeof html2pdf === 'undefined') {
+            alert("PDF作成システムが読み込まれていません。ページを再読み込みしてください。");
+            return;
+        }
+
+        const element = document.getElementById("settlement-content");
+        if (!element) {
+            alert("支払明細のデータが見つかりません。");
+            return;
+        }
+
+        // 保存ファイル名
+        const fileName = this.form.univ_name ? `支払明細_${this.form.univ_name}.pdf` : '支払明細.pdf';
+
+        const opt = {
+            // 用紙の上下余白を5mmまで削る
+            margin: [5, 10, 5, 10], 
+            filename: fileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2, 
+                useCORS: true,
+                scrollY: 0,
+                onclone: (clonedDoc) => {
+                    const target = clonedDoc.getElementById("settlement-content");
+                    if (target) {
+                        target.style.backgroundColor = "white";
+                        
+                        // --- 1. 不要な要素（ボタン類）を完全に削除 ---
+                        // 保存ボタンのエリア(.save-area)や全てのボタン(button)を非表示にする
+                        const hideSelectors = '.no-print, .save-area, .d-print-none, button, .btn';
+                        target.querySelectorAll(hideSelectors).forEach(el => {
+                            el.style.setProperty('display', 'none', 'important');
+                        });
+
+                        // 印刷用テキストを表示
+                        target.querySelectorAll('.d-print-block').forEach(el => {
+                            el.classList.remove('d-none');
+                            el.style.display = 'block';
+                        });
+
+                        // --- 2. 1ページに収めるための超圧縮スタイル ---
+                        // コンテナ全体の余白を最小限に(40px -> 5mm)
+                        target.style.padding = "5mm"; 
+
+                        // タイトルの文字サイズと下の余白を縮小
+                        const title = target.querySelector('h3');
+                        if (title) {
+                            title.style.fontSize = "16px";
+                            title.style.marginBottom = "5px";
+                        }
+
+                        // クラブ名・日付の行(h5)を小さく
+                        target.querySelectorAll('h5').forEach(h5 => {
+                            h5.style.fontSize = "12px";
+                            h5.style.marginBottom = "5px";
+                        });
+
+                        // テーブルのセルの余白と文字サイズを極限まで詰める
+                        target.querySelectorAll('.report-table th, .report-table td').forEach(cell => {
+                            cell.style.padding = "2px 5px"; 
+                            cell.style.fontSize = "10px";
+                            cell.style.lineHeight = "1.1";
+                        });
+
+                        // 備考欄の見出し(h6)
+                        const memoTitle = target.querySelector('h6');
+                        if (memoTitle) {
+                            memoTitle.style.fontSize = "11px";
+                            memoTitle.style.margin = "5px 0 2px 0";
+                        }
+
+                        // 備考欄（memo-box）本体
+                        const memoBox = target.querySelector('.memo-box');
+                        if (memoBox) {
+                            memoBox.style.minHeight = "40px"; // 最小の高さを大幅に低く
+                            memoBox.style.padding = "5px";
+                            memoBox.style.fontSize = "10px";
+                            memoBox.style.border = "1px solid #000";
+                            memoBox.style.marginTop = "0px";
+                        }
+                        
+                        // 元々のHTMLにある mt-5 (大きな余白) を強制的に解除
+                        target.querySelectorAll('.mt-5, .mt-4').forEach(el => {
+                            el.style.marginTop = "5px"; 
+                        });
+                    }
+                }
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // 2. 実行
+        try {
+            html2pdf().set(opt).from(element).save();
+        } catch (err) {
+            console.error("PDF生成エラー:", err);
+            alert("PDFの作成中にエラーが発生しました。");
+        }
+    },
+
                 openDetailModal(rec, key) {
                     const raw = rec[key].rawObj; const catName = this.getCategoryName(key); const detailText = this.generateDetailString(key, raw).replace(/, /g, '\n');
                     this.detailModal = { show: true, title: `${rec.univ_name} - ${catName}`, type: 'entry', data: { text: detailText } };
@@ -3749,20 +3941,50 @@ async downloadTournamentZip() {
                     this.saveData(true);
                 },
 
-                downloadIdCard(coach) {
+               downloadIdCard(coach) {
     this.printCoach = coach;
+    
+    // データが画面に反映されるのを待ってから画像化を開始
     this.$nextTick(() => {
+        // ★プログラムが読み込めているかチェック
+        if (typeof html2canvas === 'undefined') {
+            alert("画像作成システムが読み込まれていません。HTMLの<head>内に html2canvas のscriptタグがあるか確認してください。");
+            return;
+        }
+
         const element = document.getElementById("idCardCanvas");
-        // html2canvasの設定を微調整
-        html2canvas(element, { 
-            scale: 2, 
+        if (!element) {
+            alert("ID証のデータが見つかりません。");
+            return;
+        }
+
+        // html2canvasを使ってPNG画像として撮影
+        html2canvas(element, {
+            scale: 3, // 印刷に耐えられるように3倍の高画質で撮影
             useCORS: true,
-            logging: false,
-            backgroundColor: null // 背景透過を防ぐ
+            backgroundColor: "#ffffff", // 背景を白に固定
+            onclone: (clonedDoc) => {
+                const target = clonedDoc.getElementById("idCardCanvas");
+                if (target) {
+                    // 画面外に飛んでいる要素を、撮影の瞬間だけ画面内に戻す
+                    target.style.position = 'relative';
+                    target.style.top = '0';
+                    target.style.left = '0';
+                    target.style.margin = '0';
+                }
+            }
         }).then(canvas => {
+            // 撮影したキャンバスをPNGのBlob（データ）に変換してダウンロード
             canvas.toBlob(blob => {
-                saveAs(blob, `IDCard_${coach.name}.png`);
-            });
+                if (blob) {
+                    saveAs(blob, `IDCard_${coach.name}.png`);
+                } else {
+                    alert("画像データの生成に失敗しました。");
+                }
+            }, "image/png");
+        }).catch(err => {
+            console.error("画像生成エラー:", err);
+            alert("画像の作成中にエラーが発生しました。\n原因: " + err.message);
         });
     });
 },
