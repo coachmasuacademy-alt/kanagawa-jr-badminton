@@ -3323,35 +3323,52 @@ uploadSpecificExcel(event, category, fieldName) {
                     this.adminNews = { date: '', title: '', content: '', files: [] };
                 },
 
-                updateAccount() {
+                async updateAccount() {
     const user = firebase.auth().currentUser;
-    const promises = [];
-    
-    if (this.account.newEmail) promises.push(user.updateEmail(this.account.newEmail));
-    if (this.account.newPass) promises.push(user.updatePassword(this.account.newPass));
-    
-    Promise.all(promises).then(() => {
-        alert("アカウント情報を更新しました");
-        
-        if (this.account.newEmail || this.account.newPass) {
-            if (this.account.newEmail) {
-                this.user.email = this.account.newEmail;
-            }
-            this.saveData(true, this.account.newPass || null);
+    let isEmailUpdated = false;
+    let isPassUpdated = false;
+
+    try {
+        // 1. メールアドレスの変更（入力されていれば）
+        if (this.account.newEmail) {
+            await user.updateEmail(this.account.newEmail);
+            isEmailUpdated = true;
+            this.user.email = this.account.newEmail; // Vue側のデータも即座に更新
         }
-        
+
+        // 2. パスワードの変更（入力されていれば）
+        if (this.account.newPass) {
+            await user.updatePassword(this.account.newPass);
+            isPassUpdated = true;
+        }
+
+        // どちらも変更されていない場合は何もしない
+        if (!isEmailUpdated && !isPassUpdated) return;
+
+        // 3. GAS(スプレッドシート)へ保存完了するまで「待つ(await)」
+        // saveDataPayload を直接呼び出して同期ズレを完全に防ぎます
+        await this.saveDataPayload(isPassUpdated ? this.account.newPass : null);
+
+        // 4. すべての処理が無事に終わったら完了メッセージを出す
+        alert("アカウント情報とスプレッドシートを更新しました。");
+
+        // 5. フォームのリセット
         this.account.newEmail = '';
         this.account.newPass = '';
-        
-    }).catch(err => {
-        // ★ ここからエラーハンドリングを改善 ★
+
+    } catch (err) {
+        // エラーハンドリング
         if (err.code === 'auth/requires-recent-login' || err.code === 'auth/user-token-expired') {
-            alert("セキュリティ保護のため、この操作を行うには再ログインが必要です。\n一度ログアウトして、再度ログインしてからやり直してください。");
-            this.logout(); // 強制的にログアウトさせてログイン画面に戻す
+            alert("セキュリティ保護のため、この操作を行うには再ログインが必要です。\n一度ログアウトしますので、再度ログインしてからやり直してください。");
+            this.logout();
+        } else if (err.code === 'auth/email-already-in-use') {
+            alert("入力された新しいメールアドレスは、すでに別のアカウントで使用されています。\n別のメールアドレスを指定してください。");
+        } else if (err.code === 'auth/invalid-email') {
+            alert("メールアドレスの形式が正しくありません。");
         } else {
             alert("変更エラー: " + err.message);
         }
-    });
+    }
 },
 
                 openHistoryReceipt(item) {
