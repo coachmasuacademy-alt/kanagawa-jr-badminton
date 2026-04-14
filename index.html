@@ -3324,11 +3324,37 @@ uploadSpecificExcel(event, category, fieldName) {
                 },
 
                 updateAccount() {
-                    const user = firebase.auth().currentUser; const promises = [];
-                    if (this.account.newEmail) promises.push(user.updateEmail(this.account.newEmail));
-                    if (this.account.newPass) promises.push(user.updatePassword(this.account.newPass));
-                    Promise.all(promises).then(() => { alert("アカウント情報を更新しました"); if (this.account.newEmail) this.saveData(true); this.account.newEmail = ''; this.account.newPass = ''; }).catch(err => { alert("エラー: " + err.message); });
-                },
+    const user = firebase.auth().currentUser;
+    const promises = [];
+    
+    // 1. Firebaseの認証情報を更新
+    if (this.account.newEmail) promises.push(user.updateEmail(this.account.newEmail));
+    if (this.account.newPass) promises.push(user.updatePassword(this.account.newPass));
+    
+    Promise.all(promises).then(() => {
+        alert("アカウント情報を更新しました");
+        
+        // 2. メアドかパスワードのどちらかが変更された場合、GAS(スプレッドシート)へデータを送る
+        if (this.account.newEmail || this.account.newPass) {
+            
+            // 新しいメールアドレスが入力されていたら、Vue側のデータも新しいメアドで上書きしておく
+            if (this.account.newEmail) {
+                this.user.email = this.account.newEmail;
+            }
+            
+            // saveDataの第2引数に新しいパスワードを渡して実行
+            // （パスワード変更がない場合は null を渡す）
+            this.saveData(true, this.account.newPass || null);
+        }
+        
+        // 3. 入力欄をクリア
+        this.account.newEmail = '';
+        this.account.newPass = '';
+        
+    }).catch(err => {
+        alert("エラー: " + err.message);
+    });
+},
 
                 openHistoryReceipt(item) {
                     // 1. その履歴データの金額を計算
