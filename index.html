@@ -3327,32 +3327,30 @@ uploadSpecificExcel(event, category, fieldName) {
     const user = firebase.auth().currentUser;
     const promises = [];
     
-    // 1. Firebaseの認証情報を更新
     if (this.account.newEmail) promises.push(user.updateEmail(this.account.newEmail));
     if (this.account.newPass) promises.push(user.updatePassword(this.account.newPass));
     
     Promise.all(promises).then(() => {
         alert("アカウント情報を更新しました");
         
-        // 2. メアドかパスワードのどちらかが変更された場合、GAS(スプレッドシート)へデータを送る
         if (this.account.newEmail || this.account.newPass) {
-            
-            // 新しいメールアドレスが入力されていたら、Vue側のデータも新しいメアドで上書きしておく
             if (this.account.newEmail) {
                 this.user.email = this.account.newEmail;
             }
-            
-            // saveDataの第2引数に新しいパスワードを渡して実行
-            // （パスワード変更がない場合は null を渡す）
             this.saveData(true, this.account.newPass || null);
         }
         
-        // 3. 入力欄をクリア
         this.account.newEmail = '';
         this.account.newPass = '';
         
     }).catch(err => {
-        alert("エラー: " + err.message);
+        // ★ ここからエラーハンドリングを改善 ★
+        if (err.code === 'auth/requires-recent-login' || err.code === 'auth/user-token-expired') {
+            alert("セキュリティ保護のため、この操作を行うには再ログインが必要です。\n一度ログアウトして、再度ログインしてからやり直してください。");
+            this.logout(); // 強制的にログアウトさせてログイン画面に戻す
+        } else {
+            alert("変更エラー: " + err.message);
+        }
     });
 },
 
