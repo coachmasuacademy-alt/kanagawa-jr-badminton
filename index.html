@@ -1622,6 +1622,12 @@
             <h4 class="text-primary"><i class="bi bi-folder2-open"></i> {{ catName.label }}</h4>
         </div>
 
+<div v-if="!isWithinPeriod(catKey) && !isAdmin" class="alert alert-danger fw-bold text-center shadow-sm">
+            <i class="bi bi-lock-fill"></i> 現在、この項目の申込受付期間外です。データの閲覧のみ可能です。
+        </div>
+
+        <fieldset :disabled="!isWithinPeriod(catKey) && !isAdmin">
+
         <div v-if="catKey === 'training'" class="alert alert-warning small">
             <i class="bi bi-info-circle-fill"></i>
             このカテゴリは<strong>申込ファイル(Excel)のアップロードのみ</strong>行います。
@@ -2045,6 +2051,8 @@
                                         <i class="bi bi-save"></i> データ保存
                                     </button>
                                 </div>
+
+</fieldset>
 
                                 <div v-if="activeTab === 'settlement'">
     <div class="d-flex justify-content-between align-items-center mb-4 no-print">
@@ -2583,13 +2591,22 @@
                     <div class="modal-body">
                         <p class="small text-muted">各項目の申込期限を設定します。期限を過ぎるとユーザー画面で「〜まで」と赤字で表示されます。</p>
                         <form @submit.prevent="saveDeadlines">
-                            <div v-for="(cat, key) in categories" :key="key" class="mb-2 row">
-                                <label class="col-sm-5 col-form-label col-form-label-sm fw-bold">{{ cat.label }}</label>
-                                <div class="col-sm-7">
-                                    <input type="date" class="form-control form-control-sm" v-model="deadlines[key]">
-                                </div>
-                            </div>
-                        </form>
+    <div class="row mb-2 fw-bold text-center small text-muted">
+        <div class="col-sm-4 text-start">カテゴリー</div>
+        <div class="col-sm-4">受付開始日</div>
+        <div class="col-sm-4">受付終了日</div>
+    </div>
+    
+    <div v-for="(cat, key) in categories" :key="key" class="mb-2 row align-items-center">
+        <label class="col-sm-4 col-form-label col-form-label-sm fw-bold text-truncate" :title="cat.label">{{ cat.label }}</label>
+        <div class="col-sm-4">
+            <input type="date" class="form-control form-control-sm" v-model="startDates[key]">
+        </div>
+        <div class="col-sm-4">
+            <input type="date" class="form-control form-control-sm" v-model="deadlines[key]">
+        </div>
+    </div>
+</form>
                     </div>
                     <div class="modal-footer bg-light">
                         <button type="button" class="btn btn-secondary"
@@ -2673,6 +2690,7 @@
                     form: { univ_id: '', univ_name: '', representative: '' }, memo: '', coachSearchQuery: '',
 
                     deadlines: {},
+startDates: {},
                     showDeadlineModal: false,
                     broadcastModal: { show: false, message: '' },
                     isSendingBroadcast: false,
@@ -2871,10 +2889,18 @@
 
         // 期限設定のリアルタイム取得
         db.collection('config').doc('tournaments').onSnapshot(doc => {
-            if (doc.exists) {
-                this.deadlines = doc.data() || {};
-            }
-        });
+    if (doc.exists) {
+        const data = doc.data() || {};
+        // 新しい形式（deadlinesとstartDatesが分かれている）か判別
+        if (data.deadlines) {
+            this.deadlines = data.deadlines;
+            this.startDates = data.startDates || {};
+        } else {
+            this.deadlines = data; // 古い形式の互換性
+            this.startDates = {};
+        }
+    }
+});
 
         // データ取得完了後に、もし既にログイン済みであれば初期化を実行
         if (this.user) {
@@ -2944,17 +2970,48 @@
 
             methods: {
                 // ▼▼▼ 追加: 期限関連のメソッド ▼▼▼
+                isWithinPeriod(key) {
+                    // 管理者は期間外でも操作可能にしたい場合は以下の行のコメントを外してください
+                    // if (this.isAdmin) return true;
+
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // 今日の0時0分0秒
+
+                    const startStr = this.startDates[key];
+                    const endStr = this.deadlines[key];
+
+                    // 開始日が設定されていて、今日がそれより前ならNG (false)
+                    if (startStr) {
+                        const startDate = new Date(startStr);
+                        startDate.setHours(0, 0, 0, 0);
+                        if (today < startDate) return false;
+                    }
+
+                    // 終了日が設定されていて、今日がそれより後ならNG (false)
+                    if (endStr) {
+                        const endDate = new Date(endStr);
+                        endDate.setHours(23, 59, 59, 999); // 終了日の終わりまでOKにする
+                        if (today > endDate) return false;
+                    }
+
+                    return true; // 期間中、または設定されていない場合はOK
+                },
+
                 saveDeadlines() {
-                    if (!confirm("設定した申込期限を保存・公開しますか？")) return;
-                    db.collection('config').doc('tournaments').set(this.deadlines)
-                        .then(() => {
-                            alert("期限設定を更新しました");
-                            this.showDeadlineModal = false;
-                        })
-                        .catch(error => {
-                            console.error("Error saving deadlines: ", error);
-                            alert("保存に失敗しました");
-                        });
+                    if (!confirm("設定した受付期間を保存・公開しますか？")) return;
+                    // 開始日と終了日の両方を保存する
+                    db.collection('config').doc('tournaments').set({
+                        deadlines: this.deadlines,
+                        startDates: this.startDates
+                    }, { merge: true })
+                    .then(() => {
+                        alert("受付期間を更新しました");
+                        this.showDeadlineModal = false;
+                    })
+                    .catch(error => {
+                        console.error("Error saving deadlines: ", error);
+                        alert("保存に失敗しました");
+                    });
                 },
                 isExpired(key) {
                     if (!this.deadlines[key]) return false;
