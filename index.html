@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>神奈川県小学生バドミントン連盟 登録管理システム</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+<link rel="manifest" href="manifest.json">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
@@ -13,6 +15,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -2969,6 +2974,23 @@ startDates: {},
 },
 
             methods: {
+async requestNotificationPermission() {
+                    const messaging = firebase.messaging();
+                    try {
+                        // Firebaseコンソールで取得したVAPIDキーを指定
+                        const token = await messaging.getToken({ vapidKey: 'YOUR_PUBLIC_VAPID_KEY_HERE' });
+                        if (token) {
+                            // 取得したトークンをFirestoreのユーザーデータに保存
+                            await db.collection('users').doc(String(this.form.univ_id)).set({
+                                fcmToken: token
+                            }, { merge: true });
+                            console.log('通知トークンを保存しました');
+                        }
+                    } catch (error) {
+                        console.error('通知の許可が得られませんでした', error);
+                    }
+                },
+
                 // ▼▼▼ 追加: 期限関連のメソッド ▼▼▼
                 isWithinPeriod(key) {
                     // 管理者は期間外でも操作可能にしたい場合は以下の行のコメントを外してください
@@ -3512,7 +3534,7 @@ uploadSpecificExcel(event, category, fieldName) {
                 },
 
 
-                initUserData(em) {
+               initUserData(em) {
                     const d = this.savedRecords.find(r => r.email === em);
                     if (d) {
                         this.form.univ_id = d.univ_id; this.form.univ_name = d.univ_name; this.form.representative = d.representative || ''; if (d.memo) this.memo = d.memo;
@@ -3529,8 +3551,16 @@ uploadSpecificExcel(event, category, fieldName) {
                         } else {
                             this.coachList = [];
                         }
+                        
+                        // ▼▼▼ ここから追加 ▼▼▼
+                        // ユーザーのデータがセットされたタイミングで通知の許可を求める
+                        if (!this.isAdmin) {
+                            this.requestNotificationPermission();
+                        }
+                        // ▲▲▲ ここまで追加 ▲▲▲
                     }
                 },
+
                 saveDataPayload(password = null) {
                     const p = {
                         univ_id: this.form.univ_id,
