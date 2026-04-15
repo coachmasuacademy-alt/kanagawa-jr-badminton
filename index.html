@@ -2885,6 +2885,16 @@ startDates: {},
     this.isLoading = true;
     const url = GAS_API_URL + "?t=" + new Date().getTime();
 
+const urlParams = new URLSearchParams(window.location.search);
+                const roleParam = urlParams.get('role');
+                if (roleParam) {
+                    // パラメーターがある場合、初期タブをチャットにする
+                    this.activeTab = 'chat';
+                    
+                    // URLにパラメーターが残り続けるとリロード時に毎回チャットが開くため、URLをきれいに掃除する
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+
     // 1. GASからマスタデータと登録済みレコードを取得
     fetch(url).then(r => r.json()).then(d => {
         this.masterData = d.master || [];
