@@ -603,7 +603,7 @@
                                     </div>
                                 </div>
 
-                                <template v-for="(catName, catKey) in categories" :key="catKey">
+<template v-for="(catName, catKey) in categories" :key="catKey">
                                     <div v-if="activeTab === catKey">
                                         <div class="d-flex justify-content-between align-items-center mb-3">
                                             <h4 class="text-primary"><i class="bi bi-folder2-open"></i> {{ catName.label }}</h4>
@@ -611,6 +611,7 @@
                                         <div v-if="!isWithinPeriod(catKey) && !isAdmin" class="alert alert-danger fw-bold text-center shadow-sm">
                                             <i class="bi bi-lock-fill"></i> 現在、この項目の申込受付期間外です。データの閲覧のみ可能です。
                                         </div>
+                                        
                                         <fieldset :disabled="!isWithinPeriod(catKey) && !isAdmin">
                                             <div v-if="catKey === 'training'" class="alert alert-warning small">
                                                 <i class="bi bi-info-circle-fill"></i> このカテゴリは<strong>申込ファイル(Excel)のアップロードのみ</strong>行います。
@@ -688,9 +689,8 @@
                                                     </div>
                                                 </div>
                                             </div>
-
+                                            
                                             <div v-else-if="catKey === 'add_reg'" class="row g-3">
-                                                
                                                 <div class="col-12 mb-3" v-if="entry.add_reg.history && entry.add_reg.history.length > 0">
                                                     <div class="card bg-light border-secondary">
                                                         <div class="card-header bg-secondary text-white small py-1">
@@ -743,21 +743,17 @@
                                                             <div v-if="entry.add_reg.receipt_url_early">
                                                                 <div class="d-flex align-items-center gap-2 mb-2">
                                                                     <span class="badge bg-success">登録済</span>
-                                                                    <button v-if="isWithinPeriod('add_reg') || isAdmin" class="btn btn-sm btn-outline-danger py-0" @click="deleteSpecificReceipt('add_reg', 'receipt_url_early')">削除</button>
+                                                                    <button class="btn btn-sm btn-outline-danger py-0" @click="deleteSpecificReceipt('add_reg', 'receipt_url_early')">削除</button>
                                                                 </div>
                                                                 <img :src="entry.add_reg.receipt_url_early" class="img-fluid border rounded bg-white mb-2" style="max-height: 100px; object-fit: contain;">
                                                                 <button class="btn btn-sm btn-outline-dark w-100" @click="openSpecificReceipt('early')"><i class="bi bi-receipt"></i> 領収書を発行</button>
                                                             </div>
                                                             <div v-else>
-                                                                <div v-if="isWithinPeriod('add_reg') || isAdmin">
-                                                                    <input type="file" class="form-control form-control-sm" accept="image/*" @change="uploadSpecificReceipt($event, 'add_reg', 'receipt_url_early')">
-                                                                </div>
-                                                                <div v-else class="small text-danger fw-bold">期間外です</div>
+                                                                <input type="file" class="form-control form-control-sm" accept="image/*" @change="uploadSpecificReceipt($event, 'add_reg', 'receipt_url_early')">
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-
 
                                                 <div class="col-md-6">
                                                     <div class="card border-info h-100 shadow-sm">
@@ -789,22 +785,20 @@
                                                             <div v-if="entry.add_reg.receipt_url_late">
                                                                 <div class="d-flex align-items-center gap-2 mb-2">
                                                                     <span class="badge bg-primary">登録済</span>
-                                                                    <button v-if="isWithinPeriod('add_reg') || isAdmin" class="btn btn-sm btn-outline-danger py-0" @click="deleteSpecificReceipt('add_reg', 'receipt_url_late')">削除</button>
+                                                                    <button class="btn btn-sm btn-outline-danger py-0" @click="deleteSpecificReceipt('add_reg', 'receipt_url_late')">削除</button>
                                                                 </div>
                                                                 <img :src="entry.add_reg.receipt_url_late" class="img-fluid border rounded bg-white mb-2" style="max-height: 100px; object-fit: contain;">
                                                                 <button class="btn btn-sm btn-outline-dark w-100" @click="openSpecificReceipt('late')"><i class="bi bi-receipt"></i> 領収書を発行</button>
                                                             </div>
                                                             <div v-else>
-                                                                <div v-if="isWithinPeriod('add_reg') || isAdmin">
-                                                                    <input type="file" class="form-control form-control-sm" accept="image/*" @change="uploadSpecificReceipt($event, 'add_reg', 'receipt_url_late')">
-                                                                </div>
-                                                                <div v-else class="small text-danger fw-bold">期間外です</div>
+                                                                <input type="file" class="form-control form-control-sm" accept="image/*" @change="uploadSpecificReceipt($event, 'add_reg', 'receipt_url_late')">
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div v-else-if="catKey !== 'add_reg'" class="excel-upload-area">
+
+                                            <div v-else class="excel-upload-area">
                                                 <label class="form-label fw-bold">申込ファイル(Excel)のアップロード</label>
                                                 <div v-if="entry[catKey].excel_url" class="mt-3">
                                                     <div class="d-flex align-items-center justify-content-center gap-2">
@@ -830,26 +824,6 @@
                                                         <div class="col-md-6">
                                                             <label>指導者登録 (¥1,500)</label>
                                                             <div class="input-group"><input type="number" v-model.number="entry.reg_fee.count_coach" class="form-control" min="0"><span class="input-group-text">名</span></div>
-                                                        </div>
-                                                    </div>
-                                                    <div v-if="catKey === 'class_tourney'" class="row g-3">
-                                                        <div class="col-md-6">
-                                                            <label>ビギナーズ (¥2,000/人)</label>
-                                                            <div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_beginner" class="form-control" min="0"><span class="input-group-text">名</span></div>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <label>ミックス複 (¥4,000/組)</label>
-                                                            <div class="input-group"><input type="number" v-model.number="entry.class_tourney.count_mix" class="form-control" min="0"><span class="input-group-text">組</span></div>
-                                                        </div>
-                                                    </div>
-                                                    <div v-if="catKey === 'wakaba'" class="row g-3">
-                                                        <div class="col-md-6">
-                                                            <label class="fw-bold text-secondary">1部 参加チーム (¥15,000)</label>
-                                                            <div class="input-group"><input type="number" v-model.number="entry.wakaba.count_1" class="form-control" min="0"><span class="input-group-text">チーム</span></div>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <label class="fw-bold text-primary">2部 参加チーム (¥15,000)</label>
-                                                            <div class="input-group"><input type="number" v-model.number="entry.wakaba.count_2" class="form-control" min="0"><span class="input-group-text">チーム</span></div>
                                                         </div>
                                                     </div>
                                                     <div v-if="catKey === 'abc'" class="row g-3">
@@ -892,58 +866,45 @@
                                                             <div class="input-group"><input type="number" v-model.number="entry.fed_doubles.count_double" class="form-control" min="0"><span class="input-group-text">組</span></div>
                                                         </div>
                                                     </div>
-
                                                 </div>
                                             </div>
-                                            
-                                            </fieldset>
+                                        </fieldset>
+
                                         <div class="payment-box" v-if="catKey !== 'training' && catKey !== 'add_reg'">
-                                                <div class="text-center">
-                                                    <h5 class="text-dark mb-1">合計支払額: <strong>{{ formatMoney(calculateCategoryTotal(catKey)) }}</strong></h5>
-                                                    <div class="bg-white rounded border border-warning p-2 my-3 d-inline-block px-4 shadow-sm">
-                                                        <div class="small text-muted border-bottom mb-1 pb-1">振込先</div>
-                                                        <div class="fw-bold text-dark fs-5">ゆうちょ銀行　店番：098<br>普通貯金　番号：0334265</div>
+                                            <div class="text-center">
+                                                <h5 class="text-dark mb-1">合計支払額: <strong>{{ formatMoney(calculateCategoryTotal(catKey)) }}</strong></h5>
+                                                <div class="bg-white rounded border border-warning p-2 my-3 d-inline-block px-4 shadow-sm">
+                                                    <div class="small text-muted border-bottom mb-1 pb-1">振込先</div>
+                                                    <div class="fw-bold text-dark fs-5">ゆうちょ銀行　店番：098<br>普通貯金　番号：0334265</div>
+                                                </div>
+                                                <p class="mb-2 text-muted small">下記番号を振込名義の前に入力してください</p>
+                                                <div class="payment-id">{{ entry[catKey].payment_id }}</div>
+                                                <div class="mt-2 text-danger fw-bold">振込名義: {{ entry[catKey].payment_id }} {{ form.univ_name }}</div>
+
+                                                <div class="receipt-area">
+                                                    <h6 class="small fw-bold mb-3">振込明細の写真</h6>
+                                                    <div v-if="entry[catKey].receipt_url">
+                                                        <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                                                            <span class="badge badge-uploaded"><i class="bi bi-check-circle-fill"></i> 登録済み</span>
+                                                            <button class="btn btn-sm btn-outline-danger" @click="deleteReceipt(catKey)"><i class="bi bi-trash"></i> 削除</button>
+                                                        </div>
+                                                        <div class="mb-3"><img :src="entry[catKey].receipt_url" class="receipt-preview"></div>
+                                                        <div class="mt-3 border-top pt-2">
+                                                            <button class="btn btn-outline-dark w-100" @click="openReceipt(catKey)">
+                                                                <i class="bi bi-receipt"></i> 領収書を発行
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <p class="mb-2 text-muted small">下記番号を振込名義の前に入力してください</p>
-                                                    <div class="payment-id">{{ entry[catKey].payment_id }}</div>
-                                                    <div class="mt-2 text-danger fw-bold">振込名義: {{ entry[catKey].payment_id }} {{ form.univ_name }}</div>
-
-
-
-                                                    <div class="receipt-area" v-if="catKey !== 'add_reg'">
-    <h6 class="small fw-bold mb-3">振込明細の写真</h6>
-    
-    <div v-if="entry[catKey].receipt_url">
-        <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
-            <span class="badge badge-uploaded"><i class="bi bi-check-circle-fill"></i> 登録済み</span>
-            <button v-if="isWithinPeriod(catKey) || isAdmin" class="btn btn-sm btn-outline-danger" @click="deleteReceipt(catKey)"><i class="bi bi-trash"></i> 削除</button>
-        </div>
-        <div class="mb-3"><img :src="entry[catKey].receipt_url" class="receipt-preview"></div>
-        <div class="mt-3 border-top pt-2">
-            <button class="btn btn-outline-dark w-100" @click="openReceipt(catKey)">
-                <i class="bi bi-receipt"></i> 領収書を発行
-            </button>
-        </div>
-    </div>
-    
-    <div v-else>
-        <span class="badge badge-missing mb-2">未登録</span>
-        <div class="mt-2" v-if="isWithinPeriod(catKey) || isAdmin">
-            <input type="file" class="form-control form-control-sm w-75 mx-auto" accept="image/*" @change="uploadReceipt($event, catKey)">
-            <div v-if="isUploading" class="spinner-border spinner-border-sm mt-2"></div>
-        </div>
-        <div v-else class="small text-danger mt-2 fw-bold">
-            ※受付期間が終了したためアップロードできません。
-        </div>
-    </div>
-</div>
-                                                    <div class="receipt-area" v-else>
-                                                        <div class="alert alert-info small border-0 mb-0">
-                                                            <i class="bi bi-info-circle-fill"></i> 追加登録の振込明細は、上の「追加登録フォーム」内でExcelと一緒にアップロードし、リストに追加してください。
+                                                    <div v-else>
+                                                        <span class="badge badge-missing mb-2">未登録</span>
+                                                        <div class="mt-2">
+                                                            <input type="file" class="form-control form-control-sm w-75 mx-auto" accept="image/*" @change="uploadReceipt($event, catKey)">
+                                                            <div v-if="isUploading" class="spinner-border spinner-border-sm mt-2"></div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
+                                        </div>
                                         
                                         <div v-if="categories[activeTab] && activeTab !== 'training'" class="save-area">
                                             <button @click="saveData(false)" class="btn btn-primary btn-lg px-5" :disabled="isSaving"><i class="bi bi-save"></i> データ保存</button>
