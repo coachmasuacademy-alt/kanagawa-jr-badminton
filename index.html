@@ -287,6 +287,9 @@
                                     <button class="btn btn-outline-primary" @click="downloadAbcList" v-if="selectedTournament === 'abc'">
                                         <i class="bi bi-person-lines-fill"></i> ⑤ABC大会 名簿CSV抽出
                                     </button>
+<button class="btn btn-outline-primary" @click="downloadUmpireList" v-if="selectedTournament === 'umpire'">
+    <i class="bi bi-person-lines-fill"></i> ⑥審判講習会 名簿CSV抽出
+</button>
                                 </div>
                                 <div v-if="isZipping" class="text-success small mt-1">
                                     <div class="spinner-border spinner-border-sm" role="status"></div> ファイルを収集中... (時間がかかる場合があります)
@@ -445,43 +448,28 @@
 
 <td v-for="key in adminStatusKeys" :key="key" style="min-width: 100px; vertical-align: top;">
     <template v-if="key === 'add_reg'">
-        <div class="p-1 mb-2 border rounded bg-white small" style="font-size:0.75rem;">
-            <div class="fw-bold text-success border-bottom pb-1 mb-1">① 6/20まで</div>
-            <div class="mb-1">
-                <a v-if="rec[key].rawObj.excel_url_june" :href="rec[key].rawObj.excel_url_june" target="_blank" class="badge bg-success text-decoration-none w-100"><i class="bi bi-file-earmark-excel"></i> 申込有DL</a>
-                <span v-else class="badge bg-light text-muted border w-100">未提出</span>
-            </div>
-            <div>
-                <a v-if="rec[key].rawObj.receipt_url_june" :href="rec[key].rawObj.receipt_url_june" target="_blank" class="btn btn-primary btn-sm py-0 w-100" style="font-size:0.65rem;"><i class="bi bi-image"></i> 振込明細</a>
-                <span v-else class="badge bg-light text-muted border w-100">未振込</span>
-            </div>
-            <div class="text-muted mt-1 text-center" style="font-size:0.65rem;">選{{rec[key].rawObj.count_player_june || 0}} / 指{{rec[key].rawObj.count_coach_june || 0}}</div>
+    <div class="p-1 mb-2 border rounded bg-white small" style="font-size:0.75rem;">
+        <div class="fw-bold text-success border-bottom pb-1 mb-1">① 6/20まで</div>
+        <div class="mb-1">
+            <a v-if="rec[key].rawObj.excel_url_june" :href="rec[key].rawObj.excel_url_june" target="_blank" class="badge bg-success text-decoration-none w-100"><i class="bi bi-file-earmark-excel"></i> 申込有DL</a>
+            <span v-else class="badge bg-light text-muted border w-100">未提出</span>
         </div>
-        <div class="p-1 mb-2 border rounded bg-white small" style="font-size:0.75rem;">
-            <div class="fw-bold text-primary border-bottom pb-1 mb-1">② 関東前</div>
-            <div class="mb-1">
-                <a v-if="rec[key].rawObj.excel_url_early" :href="rec[key].rawObj.excel_url_early" target="_blank" class="badge bg-success text-decoration-none w-100"><i class="bi bi-file-earmark-excel"></i> 申込有DL</a>
-                <span v-else class="badge bg-light text-muted border w-100">未提出</span>
-            </div>
-            <div>
-                <a v-if="rec[key].rawObj.receipt_url_early" :href="rec[key].rawObj.receipt_url_early" target="_blank" class="btn btn-primary btn-sm py-0 w-100" style="font-size:0.65rem;"><i class="bi bi-image"></i> 振込明細</a>
-                <span v-else class="badge bg-light text-muted border w-100">未振込</span>
-            </div>
-            <div class="text-muted mt-1 text-center" style="font-size:0.65rem;">選{{rec[key].rawObj.count_player_early || 0}} / 指{{rec[key].rawObj.count_coach_early || 0}}</div>
+    </div>
+    <div class="p-1 mb-2 border rounded bg-white small" style="font-size:0.75rem;">
+        <div class="fw-bold text-primary border-bottom pb-1 mb-1">② 関東前</div>
+        <div class="mb-1">
+            <a v-if="rec[key].rawObj.excel_url_early" :href="rec[key].rawObj.excel_url_early" target="_blank" class="badge bg-success text-decoration-none w-100"><i class="bi bi-file-earmark-excel"></i> 申込有DL</a>
+            <span v-else class="badge bg-light text-muted border w-100">未提出</span>
         </div>
-        <div class="p-1 border rounded bg-white small" style="font-size:0.75rem;">
-            <div class="fw-bold text-info border-bottom pb-1 mb-1">③ 1月新人</div>
-            <div class="mb-1">
-                <a v-if="rec[key].rawObj.excel_url_late" :href="rec[key].rawObj.excel_url_late" target="_blank" class="badge bg-success text-decoration-none w-100"><i class="bi bi-file-earmark-excel"></i> 申込有DL</a>
-                <span v-else class="badge bg-light text-muted border w-100">未提出</span>
-            </div>
-            <div>
-                <a v-if="rec[key].rawObj.receipt_url_late" :href="rec[key].rawObj.receipt_url_late" target="_blank" class="btn btn-primary btn-sm py-0 w-100" style="font-size:0.65rem;"><i class="bi bi-image"></i> 振込明細</a>
-                <span v-else class="badge bg-light text-muted border w-100">未振込</span>
-            </div>
-            <div class="text-muted mt-1 text-center" style="font-size:0.65rem;">選{{rec[key].rawObj.count_player_late || 0}} / 指{{rec[key].rawObj.count_coach_late || 0}}</div>
+    </div>
+    <div class="p-1 border rounded bg-white small" style="font-size:0.75rem;">
+        <div class="fw-bold text-info border-bottom pb-1 mb-1">③ 1月新人</div>
+        <div class="mb-1">
+            <a v-if="rec[key].rawObj.excel_url_late" :href="rec[key].rawObj.excel_url_late" target="_blank" class="badge bg-success text-decoration-none w-100"><i class="bi bi-file-earmark-excel"></i> 申込有DL</a>
+            <span v-else class="badge bg-light text-muted border w-100">未提出</span>
         </div>
-    </template>
+    </div>
+</template>
 
     <template v-else>
         <div class="mb-1">
@@ -2262,6 +2250,63 @@ document.addEventListener("visibilitychange", () => {
                         return Array.isArray(parsed) ? parsed : [];
                     } catch (e) { return []; }
                 },
+
+async downloadUmpireList() {
+    const key = 'umpire';
+    const targets = this.filteredAdminRecords.filter(r => r[key].hasExcel);
+    if (targets.length === 0) return alert("申込ファイルがあるチームがありません。");
+    if (!confirm(`提出済みの ${targets.length} チームから審判講習会の名簿を抽出します。よろしいですか？`)) return;
+
+    this.isZipping = true;
+    let participants = [["チーム名", "会員番号", "姓", "名", "姓カナ", "名カナ", "性別", "生年月日", "郵便番号", "県名", "市区町村", "町域", "番地等", "建物等", "電話番号", "メール"]];
+
+    try {
+        for (const rec of targets) {
+            if (!rec[key].rawObj.excel_url) continue;
+            const res = await fetch(rec[key].rawObj.excel_url);
+            const workbook = XLSX.read(new Uint8Array(await res.arrayBuffer()), { type: 'array' });
+            
+            for (const sheetName of workbook.SheetNames) {
+                const sheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(sheet, { header: "A", defval: "" });
+
+                // 「〔申込〕」という文字が含まれる行のインデックスを探す
+                const applicationHeaderIndex = jsonData.findIndex(row => String(row.A).includes("〔申込〕"));
+                if (applicationHeaderIndex === -1) continue;
+
+                // その行以降で「保有会員番号」が含まれる行を探す
+                const dataHeaderIndex = jsonData.findIndex((row, idx) => idx > applicationHeaderIndex && String(row.A).includes("保有会員番号"));
+                if (dataHeaderIndex === -1) continue;
+
+                // データ行を読み込む
+                for (let i = dataHeaderIndex + 1; i < jsonData.length; i++) {
+                    const row = jsonData[i];
+                    
+                    // 姓(B)と名(C)が空ならデータ行ではないと判断
+                    if (!row.B && !row.C) continue; 
+                    
+                    participants.push([
+                        rec.univ_name,
+                        row.A || "未記載",
+                        row.B, row.C, row.D, row.E, row.F, 
+                        this.formatExcelDate(row.G),
+                        row.H, row.I, row.J, row.K, row.L, row.M,
+                        row.N,
+                        row.O
+                    ].map(val => this.formatAsText(val)));
+                }
+            }
+        }
+        
+        const csvContent = participants.map(row => row.join(",")).join("\n");
+        saveAs(new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv" }), `⑥審判講習会_名簿_${new Date().toLocaleDateString().replace(/\//g, '')}.csv`);
+    } catch (e) {
+        console.error(e);
+        alert("抽出中にエラーが発生しました: " + e.message);
+    } finally {
+        this.isZipping = false;
+    }
+},
                 downloadCoachCSV() {
                     let csv = "所属クラブ,氏名,BAJ ID,コーチ資格,審判資格,有効期限\n";
                     this.adminRecords.forEach(rec => {
