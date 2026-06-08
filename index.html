@@ -2165,20 +2165,43 @@ deleteSpecificExcel(category, fieldName) {
                     firebase.auth().signOut();
                 },
                 initUserData(em) {
-                    const d = this.savedRecords.find(r => r.email === em);
-                    if (d) {
-                        this.form.univ_id = d.univ_id; this.form.univ_name = d.univ_name; this.form.representative = d.representative || ''; if (d.memo) this.memo = d.memo;
-                        const safeParse = (json, defaultVal) => { if (typeof json === 'object' && json !== null) return json; try { return json ? JSON.parse(json) : defaultVal; } catch (e) { return defaultVal; } };
-                        for (const key in this.categories) {
-                            if (d[key]) {
-                                const parsed = safeParse(d[key], {}); this.entry[key] = { ...this.entry[key], ...parsed };
-                                if (!this.entry[key].payment_id) this.entry[key].payment_id = this.form.univ_id + this.categories[key].id_suffix;
-                            } else { this.entry[key].payment_id = this.form.univ_id + this.categories[key].id_suffix; }
+    const d = this.savedRecords.find(r => r.email === em);
+    if (d) {
+        this.form.univ_id = d.univ_id; 
+        this.form.univ_name = d.univ_name; 
+        this.form.representative = d.representative || ''; 
+        if (d.memo) this.memo = d.memo;
+
+        const safeParse = (json, defaultVal) => { 
+            if (typeof json === 'object' && json !== null) return json; 
+            try { return json ? JSON.parse(json) : defaultVal; } catch (e) { return defaultVal; } 
+        };
+
+        for (const key in this.categories) {
+            if (d[key]) {
+                const parsed = safeParse(d[key], {}); 
+                this.entry[key] = { ...this.entry[key], ...parsed };
+                
+                // 【重要】ここで0をセットする
+                Object.keys(this.entry[key]).forEach(subKey => {
+                    if (subKey.startsWith('count_')) {
+                        const val = this.entry[key][subKey];
+                        if (val === null || val === undefined || val === '') {
+                            this.entry[key][subKey] = 0;
                         }
-                        this.initChat(d.univ_id);
-                        this.coachList = d.coaches ? this.parseCoaches(d.coaches) : [];
-                      }
-                },
+                    }
+                });
+
+                if (!this.entry[key].payment_id) this.entry[key].payment_id = this.form.univ_id + this.categories[key].id_suffix;
+            } else { 
+                this.entry[key].payment_id = this.form.univ_id + this.categories[key].id_suffix; 
+            }
+        }
+        this.initChat(d.univ_id);
+        this.coachList = d.coaches ? this.parseCoaches(d.coaches) : [];
+    }
+},
+
                 saveDataPayload(password = null) {
                     const p = { univ_id: this.form.univ_id, email: this.user.email, univ_name: this.form.univ_name, representative: this.form.representative, memo: this.memo, total_cost: this.grandTotal, coaches: this.coachList };
                     for (const key in this.categories) p[key] = this.entry[key];
@@ -2186,26 +2209,38 @@ deleteSpecificExcel(category, fieldName) {
                     return fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(p) }).then(r => r.json());
                 },
                 async saveData(isSilent = false, password = null) {
-            if (this.isSaving) return; // 連続クリック防止
-            this.isSaving = true;
-            try {
-                const p = { 
-                    univ_id: this.form.univ_id, email: this.user.email, 
-                    univ_name: this.form.univ_name, representative: this.form.representative, 
-                    memo: this.memo, total_cost: this.grandTotal, coaches: this.coachList 
-                };
-                for (const key in this.categories) p[key] = this.entry[key];
-                if (password) p.password = password;
-                
-                await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(p) }).then(r => r.json());
-                if (!isSilent) alert("保存しました");
-            } catch (e) {
-                console.error(e);
-                alert("保存通信エラーが発生しました: " + e.message);
-            } finally {
-                this.isSaving = false; // 成功・失敗に関わらず確実に押せる状態に戻す
+    if (this.isSaving) return;
+    this.isSaving = true;
+    try {
+        // ★保存直前に、すべての数値項目をチェックして空なら0にする
+        for (const key in this.entry) {
+            for (const subKey in this.entry[key]) {
+                if (subKey.startsWith('count_')) {
+                    const val = this.entry[key][subKey];
+                    if (val === null || val === undefined || val === '') {
+                        this.entry[key][subKey] = 0;
+                    }
+                }
             }
-        },
+        }
+
+        const p = { 
+            univ_id: this.form.univ_id, email: this.user.email, 
+            univ_name: this.form.univ_name, representative: this.form.representative, 
+            memo: this.memo, total_cost: this.grandTotal, coaches: this.coachList 
+        };
+        for (const key in this.categories) p[key] = this.entry[key];
+        if (password) p.password = password;
+        
+        await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(p) }).then(r => r.json());
+        if (!isSilent) alert("保存しました");
+    } catch (e) {
+        console.error(e);
+        alert("保存通信エラーが発生しました: " + e.message);
+    } finally {
+        this.isSaving = false;
+    }
+},
                 processAdminRecord(raw) {
                     const safeParse = (json, def) => { try { return json ? JSON.parse(json) : def; } catch (e) { return def; } };
                     const result = { univ_id: raw.univ_id, univ_name: raw.univ_name, total_cost: raw.total_cost, memo: raw.memo, cost_detail: "", raw_data: raw };
