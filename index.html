@@ -691,6 +691,21 @@
                                 </div>
                             </div>
 
+<div v-if="(entry.add_reg.count_player_june || 0) > 0 || (entry.add_reg.count_coach_june || 0) > 0" class="payment-box text-center mb-3 p-3">
+    <h6 class="fw-bold mb-2">お支払い情報</h6>
+    <div class="mb-2">支払額: <strong>{{ formatMoney(((entry.add_reg.count_player_june || 0) + (entry.add_reg.count_coach_june || 0)) * 1500) }}</strong></div>
+    <div class="card border-warning mx-auto text-start bg-white mb-2" style="max-width: 450px;">
+        <div class="card-body p-2" style="font-size: 0.75rem;">
+            ゆうちょ銀行 店名：098<br>普通貯金 番号：0334265<br>名義：神奈川県小学生バドミントン連盟
+        </div>
+    </div>
+    <p class="mb-1 text-muted" style="font-size: 0.7rem;">下記番号を振込名義の前に入力してください</p>
+    <div class="payment-id mb-1" style="font-size: 1.2rem; padding: 2px 10px;">{{ entry.add_reg.payment_id }}</div>
+    <div class="text-danger fw-bold" style="font-size: 0.8rem;">
+        振込名義: {{ entry.add_reg.payment_id }} {{ form.univ_name }}
+    </div>
+</div>
+
                             <label class="form-label fw-bold text-secondary small mb-1">【振込明細 (画像)】</label>
                             <div v-if="entry.add_reg.receipt_url_june">
                                 <div class="d-flex align-items-center gap-2 mb-2">
@@ -730,12 +745,28 @@
                             <label class="form-label fw-bold text-secondary small mb-1">【登録人数】</label>
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
+
                                     <div class="input-group input-group-sm"><span class="input-group-text bg-white">選手</span><input type="number" v-model.number="entry.add_reg.count_player_early" class="form-control" min="0"></div>
                                 </div>
                                 <div class="col-6">
                                     <div class="input-group input-group-sm"><span class="input-group-text bg-white">指導者</span><input type="number" v-model.number="entry.add_reg.count_coach_early" class="form-control" min="0"></div>
                                 </div>
                             </div>
+
+<div v-if="(entry.add_reg.count_player_early || 0) > 0 || (entry.add_reg.count_coach_early || 0) > 0" class="payment-box text-center mb-3 p-3">
+    <h6 class="fw-bold mb-2">お支払い情報</h6>
+    <div class="mb-2">支払額: <strong>{{ formatMoney(((entry.add_reg.count_player_early || 0) + (entry.add_reg.count_coach_early || 0)) * 1500) }}</strong></div>
+    <div class="card border-warning mx-auto text-start bg-white mb-2">
+        <div class="card-body p-2" style="font-size: 0.75rem;">
+            ゆうちょ銀行 店名：098<br>普通貯金 番号：0334265<br>名義：神奈川県小学生バドミントン連盟
+        </div>
+    </div>
+    <p class="mb-1 text-muted" style="font-size: 0.7rem;">下記番号を振込名義の前に入力</p>
+    <div class="payment-id mb-1" style="font-size: 1.2rem; padding: 2px 10px;">{{ entry.add_reg.payment_id }}</div>
+    <div class="text-danger fw-bold" style="font-size: 0.8rem;">
+        振込名義: {{ entry.add_reg.payment_id }} {{ form.univ_name }}
+    </div>
+</div>
 
                             <label class="form-label fw-bold text-secondary small mb-1">【振込明細 (画像)】</label>
                             <div v-if="entry.add_reg.receipt_url_early">
@@ -782,6 +813,21 @@
                                     <div class="input-group input-group-sm"><span class="input-group-text bg-white">指導者</span><input type="number" v-model.number="entry.add_reg.count_coach_late" class="form-control" min="0"></div>
                                 </div>
                             </div>
+
+<div v-if="(entry.add_reg.count_player_late || 0) > 0 || (entry.add_reg.count_coach_late || 0) > 0" class="payment-box text-center mb-3 p-3">
+    <h6 class="fw-bold mb-2">お支払い情報</h6>
+    <div class="mb-2">支払額: <strong>{{ formatMoney(((entry.add_reg.count_player_late || 0) + (entry.add_reg.count_coach_late || 0)) * 500) }}</strong></div>
+    <div class="card border-warning mx-auto text-start bg-white mb-2">
+        <div class="card-body p-2" style="font-size: 0.75rem;">
+            ゆうちょ銀行 店名：098<br>普通貯金 番号：0334265<br>名義：神奈川県小学生バドミントン連盟
+        </div>
+    </div>
+    <p class="mb-1 text-muted" style="font-size: 0.7rem;">下記番号を振込名義の前に入力</p>
+    <div class="payment-id mb-1" style="font-size: 1.2rem; padding: 2px 10px;">{{ entry.add_reg.payment_id }}</div>
+    <div class="text-danger fw-bold" style="font-size: 0.8rem;">
+        振込名義: {{ entry.add_reg.payment_id }} {{ form.univ_name }}
+    </div>
+</div>
 
                             <label class="form-label fw-bold text-secondary small mb-1">【振込明細 (画像)】</label>
                             <div v-if="entry.add_reg.receipt_url_late">
@@ -974,12 +1020,13 @@
         </div>
 </div>
 </template>
-<div v-if="categories[activeTab] && activeTab !== 'training' && activeTab !== 'umpire' && activeTab !== 'add_reg'" class="save-area">
-    <button @click="saveData(false)" class="btn btn-primary btn-lg px-5" :disabled="isSaving">
-        <i class="bi bi-save"></i> データ保存
-    </button>
+<div v-if="categories[activeTab] && activeTab !== 'training' && activeTab !== 'umpire'" class="save-area">
+    <button @click="saveData(false)" class="btn btn-primary btn-lg px-5" :disabled="isSaving || isUploading">
+    <span v-if="isSaving" class="spinner-border spinner-border-sm me-2" role="status"></span>
+    <i v-else class="bi bi-save me-2"></i>
+    {{ isSaving ? '保存中...' : 'データ保存' }}
+</button>
 </div>
-
                                 <div v-if="activeTab === 'settlement'">
                                     <div class="d-flex justify-content-between align-items-center mb-4 no-print">
                                         <h4><i class="bi bi-file-earmark-spreadsheet-fill"></i> ⑭ 支払明細</h4>
@@ -1914,11 +1961,22 @@ document.addEventListener("visibilitychange", () => {
                     if (!confirm("アップロードしたExcelファイルを削除しますか？\n（入力した人数は残ります）")) return;
                     this.entry[category].excel_url = ''; this.saveData(true);
                 },
-                uploadReceipt(event, category) {
-                    const file = event.target.files[0]; if (!file) return; this.isUploading = true;
-                    const path = `receipts/${this.form.univ_id}/${category}_${Date.now()}`;
-                    firebase.storage().ref().child(path).put(file).then(s => s.ref.getDownloadURL()).then(url => { this.entry[category].receipt_url = url; this.saveData(true); this.isUploading = false; }).catch(e => { alert("アップロード失敗: " + e.message); this.isUploading = false; });
-                },
+                async uploadReceipt(event, category) {
+            const file = event.target.files[0]; 
+            if (!file) return; 
+            this.isUploading = true;
+            const path = `receipts/${this.form.univ_id}/${category}_${Date.now()}`;
+            try {
+                const snapshot = await firebase.storage().ref().child(path).put(file);
+                const url = await snapshot.ref.getDownloadURL();
+                this.entry[category].receipt_url = url;
+                await this.saveData(true); // 自動保存も完了を待つ
+            } catch (e) {
+                alert("アップロード失敗: " + e.message);
+            } finally {
+                this.isUploading = false; // 成功・失敗に関わらず確実に押せる状態に戻す
+            }
+        },
                 deleteReceipt(category) {
                     if (!confirm("画像を削除しますか？")) return;
                     this.entry[category].receipt_url = ''; this.saveData(true);
@@ -1940,6 +1998,39 @@ document.addEventListener("visibilitychange", () => {
                     else if (category === 'class_tourney') this.entry[category].excel_url = this.entry[category].excel_url_beginner || this.entry[category].excel_url_mix;
                     this.saveData(true);
                 },
+
+deleteSpecificExcel(category, fieldName) {
+            if (!confirm("このファイルを削除しますか？")) return;
+            this.entry[category][fieldName] = '';
+            if (category === 'wakaba') this.entry[category].excel_url = this.entry[category].excel_url_1 || this.entry[category].excel_url_2;
+            else if (category === 'class_tourney') this.entry[category].excel_url = this.entry[category].excel_url_beginner || this.entry[category].excel_url_mix;
+            this.saveData(true);
+        },
+
+        /* ===== ▼ ここから追加 ▼ ===== */
+        uploadSpecificReceipt(event, category, fieldName) {
+            const file = event.target.files[0]; 
+            if (!file) return; 
+            this.isUploading = true;
+            const path = `receipts/${this.form.univ_id}/${category}_${fieldName}_${Date.now()}`;
+            firebase.storage().ref().child(path).put(file)
+                .then(s => s.ref.getDownloadURL())
+                .then(url => { 
+                    this.entry[category][fieldName] = url; 
+                    this.saveData(true); 
+                    this.isUploading = false; 
+                })
+                .catch(e => { 
+                    alert("アップロード失敗: " + e.message); 
+                    this.isUploading = false; 
+                });
+        },
+        deleteSpecificReceipt(category, fieldName) {
+            if (!confirm("振込明細の画像を削除しますか？")) return;
+            this.entry[category][fieldName] = '';
+            this.saveData(true);
+        },
+
                 uploadNewsFile(event) {
                     const file = event.target.files[0]; if (!file) return; this.isUploadingNews = true;
                     const path = `news/${Date.now()}_${file.name}`;
@@ -2094,10 +2185,27 @@ document.addEventListener("visibilitychange", () => {
                     if (password) p.password = password;
                     return fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(p) }).then(r => r.json());
                 },
-                saveData(isSilent = false, password = null) {
-                    this.isSaving = true;
-                    this.saveDataPayload(password).then(d => { if (!isSilent) alert("保存しました"); this.isSaving = false; }).catch(e => { alert("エラー"); this.isSaving = false; });
-                },
+                async saveData(isSilent = false, password = null) {
+            if (this.isSaving) return; // 連続クリック防止
+            this.isSaving = true;
+            try {
+                const p = { 
+                    univ_id: this.form.univ_id, email: this.user.email, 
+                    univ_name: this.form.univ_name, representative: this.form.representative, 
+                    memo: this.memo, total_cost: this.grandTotal, coaches: this.coachList 
+                };
+                for (const key in this.categories) p[key] = this.entry[key];
+                if (password) p.password = password;
+                
+                await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(p) }).then(r => r.json());
+                if (!isSilent) alert("保存しました");
+            } catch (e) {
+                console.error(e);
+                alert("保存通信エラーが発生しました: " + e.message);
+            } finally {
+                this.isSaving = false; // 成功・失敗に関わらず確実に押せる状態に戻す
+            }
+        },
                 processAdminRecord(raw) {
                     const safeParse = (json, def) => { try { return json ? JSON.parse(json) : def; } catch (e) { return def; } };
                     const result = { univ_id: raw.univ_id, univ_name: raw.univ_name, total_cost: raw.total_cost, memo: raw.memo, cost_detail: "", raw_data: raw };
