@@ -291,6 +291,9 @@
 <button class="btn btn-outline-primary" @click="downloadUmpireList" v-if="selectedTournament === 'umpire'">
     <i class="bi bi-person-lines-fill"></i> ⑥審判講習会 名簿CSV抽出
 </button>
+<button class="btn btn-outline-primary" @click="downloadChairmanList" v-if="selectedTournament === 'chairman'">
+            <i class="bi bi-person-lines-fill"></i> ⑦会長杯 名簿CSV抽出
+        </button>
                                 </div>
                                 <div v-if="isZipping" class="text-success small mt-1">
                                     <div class="spinner-border spinner-border-sm" role="status"></div> ファイルを収集中... (時間がかかる場合があります)
@@ -668,7 +671,7 @@
                 <div class="card border-success h-100 shadow-sm">
                     <div class="card-header bg-success text-white fw-bold py-2"><i class="bi bi-1-circle"></i> 6月20日まで (¥1,500/名)</div>
                     <div class="card-body bg-light">
-                        <fieldset :disabled="!isWithinPeriod(catKey) && !isAdmin">
+                       
                             <label class="form-label fw-bold text-secondary small mb-1">【申込ファイル】</label>
                             <div v-if="entry.add_reg.excel_url_june" class="mb-3">
                                 <div class="d-flex align-items-center gap-2">
@@ -678,7 +681,7 @@
                                 <a :href="entry.add_reg.excel_url_june" target="_blank" class="d-block mt-1 small"><i class="bi bi-file-earmark-excel"></i> ファイルを確認</a>
                             </div>
                             <div v-else class="mb-3">
-                                <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'add_reg', 'excel_url_june')">
+                                <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'add_reg', 'excel_url_june')":disabled="!isWithinPeriod(catKey) && !isAdmin">
                             </div>
 
                             <label class="form-label fw-bold text-secondary small mb-1">【登録人数】</label>
@@ -717,7 +720,7 @@
                             <div v-else>
                                 <input type="file" class="form-control form-control-sm" accept="image/*" @change="uploadSpecificReceipt($event, 'add_reg', 'receipt_url_june')">
                             </div>
-                        </fieldset>
+                        
                         <div v-if="entry.add_reg.receipt_url_june" class="mt-2">
                             <button class="btn btn-sm btn-outline-dark w-100" @click="openSpecificReceipt('june')"><i class="bi bi-receipt"></i> 領収書を発行</button>
                         </div>
@@ -729,7 +732,7 @@
                 <div class="card border-primary h-100 shadow-sm">
                     <div class="card-header bg-primary text-white fw-bold py-2"><i class="bi bi-2-circle"></i> 8月20日まで (¥1,500/名)</div>
                     <div class="card-body bg-light">
-                        <fieldset :disabled="!isWithinPeriod(catKey) && !isAdmin">
+                        
                             <label class="form-label fw-bold text-secondary small mb-1">【申込ファイル】</label>
                             <div v-if="entry.add_reg.excel_url_early" class="mb-3">
                                 <div class="d-flex align-items-center gap-2">
@@ -739,7 +742,7 @@
                                 <a :href="entry.add_reg.excel_url_early" target="_blank" class="d-block mt-1 small"><i class="bi bi-file-earmark-excel"></i> ファイルを確認</a>
                             </div>
                             <div v-else class="mb-3">
-                                <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'add_reg', 'excel_url_early')">
+                                <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'add_reg', 'excel_url_early')":disabled="!isWithinPeriod(catKey) && !isAdmin">
                             </div>
 
                             <label class="form-label fw-bold text-secondary small mb-1">【登録人数】</label>
@@ -779,7 +782,7 @@
                             <div v-else>
                                 <input type="file" class="form-control form-control-sm" accept="image/*" @change="uploadSpecificReceipt($event, 'add_reg', 'receipt_url_early')">
                             </div>
-                        </fieldset>
+                        
                         <div v-if="entry.add_reg.receipt_url_early" class="mt-2">
                             <button class="btn btn-sm btn-outline-dark w-100" @click="openSpecificReceipt('early')"><i class="bi bi-receipt"></i> 領収書を発行</button>
                         </div>
@@ -791,7 +794,7 @@
                 <div class="card border-info h-100 shadow-sm">
                     <div class="card-header bg-info text-white fw-bold py-2"><i class="bi bi-3-circle"></i> 1月 新人戦 (¥500/名)</div>
                     <div class="card-body bg-light">
-                        <fieldset :disabled="!isWithinPeriod(catKey) && !isAdmin">
+                        
                             <label class="form-label fw-bold text-secondary small mb-1">【申込ファイル】</label>
                             <div v-if="entry.add_reg.excel_url_late" class="mb-3">
                                 <div class="d-flex align-items-center gap-2">
@@ -801,7 +804,7 @@
                                 <a :href="entry.add_reg.excel_url_late" target="_blank" class="d-block mt-1 small"><i class="bi bi-file-earmark-excel"></i> ファイルを確認</a>
                             </div>
                             <div v-else class="mb-3">
-                                <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'add_reg', 'excel_url_late')">
+                                <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'add_reg', 'excel_url_late')":disabled="!isWithinPeriod(catKey) && !isAdmin">
                             </div>
 
                             <label class="form-label fw-bold text-secondary small mb-1">【登録人数】</label>
@@ -840,7 +843,7 @@
                             <div v-else>
                                 <input type="file" class="form-control form-control-sm" accept="image/*" @change="uploadSpecificReceipt($event, 'add_reg', 'receipt_url_late')">
                             </div>
-                        </fieldset>
+                       
                         <div v-if="entry.add_reg.receipt_url_late" class="mt-2">
                             <button class="btn btn-sm btn-outline-dark w-100" @click="openSpecificReceipt('late')"><i class="bi bi-receipt"></i> 領収書を発行</button>
                         </div>
@@ -850,7 +853,7 @@
         </div>
 
         <div v-else>
-            <fieldset :disabled="!isWithinPeriod(catKey) && !isAdmin">
+            
                 <div v-if="catKey === 'umpire'" class="alert alert-warning small">
                     <i class="bi bi-info-circle-fill"></i> このカテゴリは<strong>申込ファイル(Excel)のアップロードのみ</strong>行います。
                 </div>
@@ -868,7 +871,7 @@
                                     <a :href="entry.class_tourney.excel_url_beginner" target="_blank" class="d-block mt-2 small text-decoration-none"><i class="bi bi-eye"></i> ビギナーズファイルを確認</a>
                                 </div>
                                 <div v-else>
-                                    <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'class_tourney', 'excel_url_beginner')">
+                                    <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'class_tourney', 'excel_url_beginner')":disabled="!isWithinPeriod(catKey) && !isAdmin">
                                 </div>
                             </div>
                         </div>
@@ -883,7 +886,7 @@
                                     <a :href="entry.class_tourney.excel_url_mix" target="_blank" class="d-block mt-2 small text-decoration-none"><i class="bi bi-eye"></i> ミックス複ファイルを確認</a>
                                 </div>
                                 <div v-else>
-                                    <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'class_tourney', 'excel_url_mix')">
+                                    <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'class_tourney', 'excel_url_mix')":disabled="!isWithinPeriod(catKey) && !isAdmin">
                                 </div>
                             </div>
                         </div>
@@ -903,7 +906,7 @@
                                     <a :href="entry.wakaba.excel_url_1" target="_blank" class="d-block mt-2 small text-decoration-none"><i class="bi bi-eye"></i> 1部ファイルを確認</a>
                                 </div>
                                 <div v-else>
-                                    <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'wakaba', 'excel_url_1')">
+                                    <input type="file" class="form-control form-control-sm" accept=".xlsx, .xls" @change="uploadSpecificExcel($event, 'wakaba', 'excel_url_1')":disabled="!isWithinPeriod(catKey) && !isAdmin">
                                 </div>
                             </div>
                         </div>
@@ -927,20 +930,21 @@
 
                 <div v-else>
                     <div class="excel-upload-area mb-4">
-                        <label class="form-label fw-bold">申込ファイル(Excel)のアップロード</label>
-                        <div v-if="entry[catKey].excel_url" class="mt-3">
-                            <div class="d-flex align-items-center justify-content-center gap-2">
-                                <span class="badge bg-success"><i class="bi bi-file-earmark-excel"></i> アップロード済み</span>
-                                <button class="btn btn-sm btn-outline-danger" @click="deleteExcel(catKey)">削除</button>
-                            </div>
-                            <a :href="entry[catKey].excel_url" target="_blank" class="d-block mt-1 small">確認する</a>
-                        </div>
-                        <div v-else>
-                            <input type="file" class="form-control w-75 mx-auto" accept=".xlsx, .xls" @change="uploadExcel($event, catKey)">
-                            <div v-if="isUploading" class="spinner-border spinner-border-sm mt-2 text-primary"></div>
-                        </div>
-                    </div>
-                </div>
+    <label class="form-label fw-bold">申込ファイル(Excel)のアップロード</label>
+    <div v-if="entry[catKey].excel_url" class="mt-3">
+        <div class="d-flex align-items-center justify-content-center gap-2">
+        <span class="badge bg-success"><i class="bi bi-file-earmark-excel"></i> アップロード済み</span>
+        <button v-if="isWithinPeriod(catKey) || isAdmin" class="btn btn-sm btn-outline-danger" @click="deleteExcel(catKey)">削除</button>
+    </div>
+    <a :href="entry[catKey].excel_url" target="_blank" class="d-block mt-1 small">確認する</a>
+</div>
+<div v-else>
+    <input type="file" class="form-control w-75 mx-auto" accept=".xlsx, .xls" 
+           @change="uploadExcel($event, catKey)" 
+           :disabled="!isWithinPeriod(catKey) && !isAdmin">
+    <div v-if="isUploading" class="spinner-border spinner-border-sm mt-2 text-primary"></div>
+</div>
+</div>
 
                 <div v-if="catKey !== 'training'" class="count-input-group mb-4">
                     <h6 class="border-bottom pb-2 mb-3">参加・登録数 入力</h6>
@@ -1009,7 +1013,7 @@
                 <div v-else class="alert alert-info small mt-4 text-center border-info">
                     <i class="bi bi-info-circle-fill"></i> この項目の参加費・受講料は<strong>当日現金徴収</strong>となります。<br>事前のお支払いおよび明細のアップロードは不要です。
                 </div>
-            </fieldset>
+            
             
             <!-- ★領収書ボタンは fieldset の外に出すので期限切れでも押せます -->
             <div v-if="catKey !== 'training' && catKey !== 'umpire' && entry[catKey].receipt_url" class="mt-4 text-center">
@@ -2553,6 +2557,65 @@ async downloadUmpireList() {
                         saveAs(new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv" }), `講習会参加者名簿_${new Date().toLocaleDateString()}.csv`);
                     } catch (e) { console.error(e); alert("抽出中にエラーが発生しました。"); } finally { this.isZipping = false; }
                 },
+
+
+async downloadChairmanList() {
+    const key = 'chairman';
+    const targets = this.filteredAdminRecords.filter(r => r[key].hasExcel);
+    if (targets.length === 0) return alert("提出されているチームがありません。");
+    if (!confirm(`提出済みの ${targets.length} チームから名簿を抽出します。よろしいですか？`)) return;
+
+    this.isZipping = true;
+    // ペアIDを追加したCSVヘッダー
+    let participants = [["チーム名", "ペアID", "区分", "性別", "種目", "学年", "氏名", "フリガナ", "ポイント"]];
+    
+    try {
+        for (const rec of targets) {
+            if (!rec[key].rawObj.excel_url) continue;
+            const res = await fetch(rec[key].rawObj.excel_url);
+            const workbook = XLSX.read(new Uint8Array(await res.arrayBuffer()), { type: 'array' });
+            
+            for (const sheetName of workbook.SheetNames) {
+                const sheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(sheet, { header: "A", defval: "", blankrows: true });
+                if (jsonData.length < 20) continue;
+
+                // ペアごとに連番を振るためのカウンター
+                let pairCounter = 1;
+
+                // 6行目～19行目をループ (index 5～18)
+                // 2行ずつが1ペアなので、stepを2にする
+                for (let i = 5; i <= 18; i += 2) {
+                    const row1 = jsonData[i];
+                    const row2 = jsonData[i + 1];
+                    if (!row1) continue;
+
+                    // Group 1: 6年生1部など (B列～O列)
+                    if (row1.H || (row2 && row2.H)) {
+                        const pairId = `チーム${rec.univ_id}-G1-P${pairCounter}`;
+                        if (row1.H) participants.push([rec.univ_name, pairId, "6年1部以下", row1.B || '', row1.D || '', row1.F || '', row1.H || '', row1.K || '', row1.N || ''].map(v => this.formatAsText(v)));
+                        if (row2 && row2.H) participants.push([rec.univ_name, pairId, "6年1部以下", row2.B || '', row2.D || '', row2.F || '', row2.H || '', row2.K || '', row2.N || ''].map(v => this.formatAsText(v)));
+                    }
+
+                    // Group 2: 6年生2部など (Q列～AD列)
+                    if ((row1 && row1.W) || (row2 && row2.W)) {
+                        const pairId = `チーム${rec.univ_id}-G2-P${pairCounter}`;
+                        if (row1.W) participants.push([rec.univ_name, pairId, "6年2部以下", row1.Q || '', row1.S || '', row1.U || '', row1.W || '', row1.Z || '', ''].map(v => this.formatAsText(v)));
+                        if (row2 && row2.W) participants.push([rec.univ_name, pairId, "6年2部以下", row2.Q || '', row2.S || '', row2.U || '', row2.W || '', row2.Z || '', ''].map(v => this.formatAsText(v)));
+                    }
+                    pairCounter++;
+                }
+            }
+        }
+        const csvContent = participants.map(row => row.join(",")).join("\n");
+        saveAs(new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv" }), `⑦会長杯ダブルス_名簿抽出_${new Date().toLocaleDateString().replace(/\//g, '')}.csv`);
+    } catch (e) {
+        console.error(e);
+        alert("抽出中にエラーが発生しました: " + e.message);
+    } finally {
+        this.isZipping = false;
+    }
+},
                 formatExcelDate(value) {
                     if (value === undefined || value === null || value === '') return '';
                     if (typeof value === 'number') {
