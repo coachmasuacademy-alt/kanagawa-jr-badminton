@@ -1745,10 +1745,21 @@ document.addEventListener("visibilitychange", () => {
                     db.collection('config').doc('tournaments').onSnapshot(doc => {
                         if (doc.exists) {
                             const data = doc.data() || {};
+                            // ★日付を YYYY-MM-DD に整形する関数
+                            const formatDateStr = (obj) => {
+                                let res = {};
+                                for (let k in obj) {
+                                    res[k] = obj[k] ? String(obj[k]).substring(0, 10) : '';
+                                }
+                                return res;
+                            };
+
                             if (data.deadlines) {
-                                this.deadlines = data.deadlines; this.startDates = data.startDates || {};
+                                this.deadlines = formatDateStr(data.deadlines); 
+                                this.startDates = formatDateStr(data.startDates || {});
                             } else {
-                                this.deadlines = data; this.startDates = {};
+                                this.deadlines = formatDateStr(data); 
+                                this.startDates = {};
                             }
                         }
                     });
@@ -2098,11 +2109,18 @@ deleteSpecificExcel(category, fieldName) {
 
 editNews(index) {
                     this.editingNewsIndex = index;
-                    // 対象のデータをフォームにコピー（ディープコピー）
+                    // 対象のデータをフォームにコピー
                     this.adminNews = JSON.parse(JSON.stringify(this.newsList[index]));
+                    
+                    // ★ ISO形式の時刻が入っている場合、YYYY-MM-DD にカットする
+                    if (this.adminNews.date) {
+                        this.adminNews.date = String(this.adminNews.date).substring(0, 10);
+                    }
+                    
                     // フォームが見えるように少し上にスクロール
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 },
+
                 updateNews() {
                     if (!this.adminNews.date || !this.adminNews.title) return alert("日付とタイトルは必須です");
                     const newsItem = JSON.parse(JSON.stringify(this.adminNews));
