@@ -294,6 +294,9 @@
 <button class="btn btn-outline-primary" @click="downloadChairmanList" v-if="selectedTournament === 'chairman'">
             <i class="bi bi-person-lines-fill"></i> ⑦会長杯 名簿CSV抽出
         </button>
+<button class="btn btn-outline-primary" @click="downloadKantoList" v-if="selectedTournament === 'kanto'">
+    <i class="bi bi-file-earmark-excel-fill"></i> ⑧関東予選 名簿Excel抽出
+</button>
                                 </div>
                                 <div v-if="isZipping" class="text-success small mt-1">
                                     <div class="spinner-border spinner-border-sm" role="status"></div> ファイルを収集中... (時間がかかる場合があります)
@@ -2693,6 +2696,81 @@ async downloadChairmanList() {
         this.isZipping = false;
     }
 },
+
+async downloadKantoList() {
+                    const key = 'kanto';
+                    const targets = this.filteredAdminRecords.filter(r => r[key] && r[key].hasExcel);
+                    if (targets.length === 0) return alert("提出されているチームがありません。");
+                    if (!confirm(`提出済みの ${targets.length} チームから関東予選の名簿を抽出します。よろしいですか？`)) return;
+
+                    this.isZipping = true;
+                    
+                    // A列〜C/D列のヘッダー定義
+                    let singles = [["種目", "氏名", "チーム名"]];
+                    let doubles = [["種目", "選手1の氏名", "選手2の氏名", "チーム名"]];
+                    
+                    try {
+                        for (const rec of targets) {
+                            if (!rec[key].rawObj.excel_url) continue;
+                            const res = await fetch(rec[key].rawObj.excel_url);
+                            const workbook = XLSX.read(new Uint8Array(await res.arrayBuffer()), { type: 'array' });
+                            
+                            for (const sheetName of workbook.SheetNames) {
+                                const sheet = workbook.Sheets[sheetName];
+                                const jsonData = XLSX.utils.sheet_to_json(sheet, { header: "A", defval: "", blankrows: true });
+                                if (jsonData.length < 19) continue;
+
+                                // シングルス抽出 (6行目〜19行目 => インデックス 5〜18)
+                                for (let i = 5; i <= 18; i++) {
+                                    const row = jsonData[i];
+                                    if (!row) continue;
+                                    // B列(性別), D列(種目), H列(氏名) が存在する場合
+                                    if (row.B && row.D && row.H) {
+                                        singles.push([row.D, row.H, rec.univ_name]);
+                                    }
+                                }
+
+                                // ダブルス抽出 (6行目〜19行目、2行で1ペア => インデックス 5〜18、2行ずつ進める)
+                                for (let i = 5; i <= 18; i += 2) {
+                                    const row1 = jsonData[i];
+                                    const row2 = jsonData[i + 1] || {};
+                                    if (!row1) continue;
+                                    // Q列(性別), S列(種目), W列(選手1氏名) が存在する場合
+                                    if (row1.Q && row1.S && row1.W) {
+                                        // 選手2の氏名は row2.W から取得（空の場合は空白文字を入れる）
+                                        doubles.push([row1.S, row1.W, row2.W || "", rec.univ_name]);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // 新しいExcelワークブックの作成
+                        const wb = XLSX.utils.book_new();
+                        
+                        // 配列データをシートに変換
+                        const wsSingles = XLSX.utils.aoa_to_sheet(singles);
+                        const wsDoubles = XLSX.utils.aoa_to_sheet(doubles);
+                        
+                        // シート幅の調整（列幅を見やすく設定）
+                        wsSingles['!cols'] = [{ wch: 20 }, { wch: 20 }, { wch: 30 }];
+                        wsDoubles['!cols'] = [{ wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 30 }];
+
+                        // ブックにシートを追加
+                        XLSX.utils.book_append_sheet(wb, wsSingles, "シングルス");
+                        XLSX.utils.book_append_sheet(wb, wsDoubles, "ダブルス");
+                        
+                        // Excelファイルとしてブラウザからダウンロード
+                        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                        saveAs(new Blob([wbout], { type: "application/octet-stream" }), `⑧関東予選_参加者名簿_${new Date().toLocaleDateString().replace(/\//g, '')}.xlsx`);
+                        
+                    } catch (e) {
+                        console.error(e);
+                        alert("抽出中にエラーが発生しました: " + e.message);
+                    } finally {
+                        this.isZipping = false;
+                    }
+                },
+
                 formatExcelDate(value) {
                     if (value === undefined || value === null || value === '') return '';
                     if (typeof value === 'number') {
