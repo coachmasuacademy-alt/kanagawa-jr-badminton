@@ -2705,9 +2705,9 @@ async downloadKantoList() {
 
                     this.isZipping = true;
                     
-                    // A列〜C/D列のヘッダー定義
-                    let singles = [["種目", "氏名", "チーム名"]];
-                    let doubles = [["種目", "選手1の氏名", "選手2の氏名", "チーム名"]];
+                    // ヘッダー定義に性別を追加
+                    let singles = [["性別", "種目", "氏名", "チーム名"]];
+                    let doubles = [["性別", "種目", "選手1の氏名", "選手2の氏名", "チーム名"]];
                     
                     try {
                         for (const rec of targets) {
@@ -2726,7 +2726,7 @@ async downloadKantoList() {
                                     if (!row) continue;
                                     // B列(性別), D列(種目), H列(氏名) が存在する場合
                                     if (row.B && row.D && row.H) {
-                                        singles.push([row.D, row.H, rec.univ_name]);
+                                        singles.push([row.B, row.D, row.H, rec.univ_name]);
                                     }
                                 }
 
@@ -2737,8 +2737,8 @@ async downloadKantoList() {
                                     if (!row1) continue;
                                     // Q列(性別), S列(種目), W列(選手1氏名) が存在する場合
                                     if (row1.Q && row1.S && row1.W) {
-                                        // 選手2の氏名は row2.W から取得（空の場合は空白文字を入れる）
-                                        doubles.push([row1.S, row1.W, row2.W || "", rec.univ_name]);
+                                        // 選手2の氏名は row2.W から取得
+                                        doubles.push([row1.Q, row1.S, row1.W, row2.W || "", rec.univ_name]);
                                     }
                                 }
                             }
@@ -2751,9 +2751,9 @@ async downloadKantoList() {
                         const wsSingles = XLSX.utils.aoa_to_sheet(singles);
                         const wsDoubles = XLSX.utils.aoa_to_sheet(doubles);
                         
-                        // シート幅の調整（列幅を見やすく設定）
-                        wsSingles['!cols'] = [{ wch: 20 }, { wch: 20 }, { wch: 30 }];
-                        wsDoubles['!cols'] = [{ wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 30 }];
+                        // シート幅の調整（性別の列を追加した分調整）
+                        wsSingles['!cols'] = [{ wch: 10 }, { wch: 20 }, { wch: 20 }, { wch: 30 }];
+                        wsDoubles['!cols'] = [{ wch: 10 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 30 }];
 
                         // ブックにシートを追加
                         XLSX.utils.book_append_sheet(wb, wsSingles, "シングルス");
